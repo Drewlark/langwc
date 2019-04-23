@@ -103,7 +103,38 @@ vector<variable> lwc_get_vars(const vector<string> &vars, unordered_map<string, 
 	return realvars;
 }
 
-vector<Line> build_lines(vector<string> slines, unordered_map<string, variable> varmap = {}) {
+string remove_chars(string &s, const char &c) {
+	s.erase(remove(s.begin(), s.end(), c), s.end());
+	return s;
+}
+
+
+vector<string> seek_block(const vector<string> &slines, const int &start) {
+	if (slines[start][slines[start].length()-1] != '{') {
+		cout << "ERROR: Expected { at line " << start << endl;
+		throw exception();
+	}
+	vector<string> lines;
+	int starts = 1;
+	for (int lnum = start+1; lnum < slines.size(); ++lnum) {
+		const string &line = slines[lnum];
+		if (slines[lnum][slines[lnum].length() - 1] == '}') {
+			--starts;
+		}
+		if (starts == 0) {
+			break;
+		}
+		else {
+			lines.push_back(line);
+		}
+		if (slines[lnum][slines[lnum].length() - 1] == '{') {
+			++starts;
+		}
+	}
+	return lines;
+}
+
+vector<Line> build_lines(const vector<string> &slines, unordered_map<string, variable> varmap = {}) {
 	vector<Line> built_lines;
 	for (int lnum = 0; lnum < slines.size(); ++lnum) {
 		string line = slines[lnum];
@@ -111,11 +142,20 @@ vector<Line> build_lines(vector<string> slines, unordered_map<string, variable> 
 		if (line.substr(0, 2) == "//") {
 			continue;
 		}
-		auto test = [&line, &broken](const string &s) {return hasex(line, s, broken); };
-		auto add_line = [&broken, &varmap, &built_lines](builtin_func f) {built_lines.push_back(Line(lwc_get_vars(broken, varmap), f)); };
+		auto test = [&line, &broken](const string &s) {return hasex(line, s, broken); }; //lambda for hasexpression check.
+		auto add_line = [&broken, &varmap, &built_lines](builtin_func f) {built_lines.push_back(Line(lwc_get_vars(broken, varmap), f)); }; //lambda to add line to built_lines
+		if (line.length() >= 1 && line[0] == '?') {
+			vector<string> blocklines = seek_block(slines, lnum);
+		}
+		
 		if (test("+=")) {
 			vector<variable> vars = lwc_get_vars(broken, varmap);
 			add_line(lwc::add);
+			built_lines.push_back(Line(vars[0], lwc::assign, true));
+		}
+		else if (test("-=")) {
+			vector<variable> vars = lwc_get_vars(broken, varmap);
+			add_line(lwc::sub);
 			built_lines.push_back(Line(vars[0], lwc::assign, true));
 		}
 		else if (test("+")) {
@@ -134,21 +174,7 @@ vector<Line> build_lines(vector<string> slines, unordered_map<string, variable> 
 	return built_lines;
 }
 
-int evaluate(vector<Line> linevec)
-{
-	static int last_eval = 0;
-	for (Line ln : linevec) {
-		if (!ln.request_last)
-			last_eval = ln.func(ln.vars);
-		else
-		{
-			vector<variable> newvars = ln.vars;
-			newvars.push_back(variable(new int(last_eval)));
-			last_eval = ln.func(newvars);
-		}
-	}
-	return 0;
-}
+
 
 int main()
 {
@@ -165,7 +191,7 @@ int main()
 		remove_whitespace(line);
 		words.push_back(line);
 	}
-	evaluate(build_lines(words));
+	lwc::evaluate(build_lines(words));
 	fs.flush();
 	cout << "Done Reading!" << endl << endl; // let the user know we are done
 	//cin >> ends;
