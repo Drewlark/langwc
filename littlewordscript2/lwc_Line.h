@@ -20,6 +20,7 @@ public:
 	std::vector<variable> vars;
 	builtin_func func;
 	bool request_last = false;
+	bool loop = false;
 	vector<Line> linked_lines;
 
 	Line() { vars = vector<variable>();}

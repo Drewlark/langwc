@@ -5,6 +5,7 @@
 #include<iostream>
 #include <algorithm>
 #include <unordered_map>
+#include <ctime>
 using namespace std;
 
 vector<string> splitString(const string &s, const string &delim)
@@ -139,19 +140,49 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 	for (int lnum = 0; lnum < slines.size(); ++lnum) {
 		string line = slines[lnum];
 		vector<string> broken;
-		if (line.substr(0, 2) == "//") {
+		if (line.substr(0, 2) == "//" || line[0] == '}') {
 			continue;
 		}
 		auto test = [&line, &broken](const string &s) {return hasex(line, s, broken); }; //lambda for hasexpression check.
 		auto add_line = [&broken, &varmap, &built_lines](builtin_func f) {built_lines.push_back(Line(lwc_get_vars(broken, varmap), f)); }; //lambda to add line to built_lines
-		if (line.length() >= 1 && line[0] == '?') {
+		if (line.length() >= 1 && (line[0] == '?' || line[0] == '@')) {
 			vector<string> blocklines = seek_block(slines, lnum);
+			bool isloop = false;
+			if (line[0] == '@') {
+				isloop = true;
+			}
+			line = line.substr(1, line.length()-2);
+			if (test("==")) {
+				vector<variable> vars = lwc_get_vars(broken, varmap);
+				vector<Line> built_block_lines = build_lines(blocklines, varmap);
+				Line newl = Line(vars, lwc::is_equal);
+				newl.linked_lines = built_block_lines;
+				newl.loop = isloop;
+				built_lines.push_back(newl);
+			}
+			else if (test(">")) {
+				vector<variable> vars = lwc_get_vars(broken, varmap);
+				vector<Line> built_block_lines = build_lines(blocklines, varmap);
+				Line newl = Line(vars, lwc::is_greaterthan);
+				newl.linked_lines = built_block_lines;
+				newl.loop = isloop;
+				built_lines.push_back(newl);
+			}
+			else if (test("<")) {
+				vector<variable> vars = lwc_get_vars(broken, varmap);
+				vector<Line> built_block_lines = build_lines(blocklines, varmap);
+				Line newl = Line(vars, lwc::is_lessthan);
+				newl.linked_lines = built_block_lines;
+				newl.loop = isloop;
+				built_lines.push_back(newl);
+			}
+			lnum += blocklines.size();
+			continue;
 		}
 		
 		if (test("+=")) {
-			vector<variable> vars = lwc_get_vars(broken, varmap);
-			add_line(lwc::add);
-			built_lines.push_back(Line(vars[0], lwc::assign, true));
+			//vector<variable> vars = lwc_get_vars(broken, varmap);
+			add_line(lwc::increment);
 		}
 		else if (test("-=")) {
 			vector<variable> vars = lwc_get_vars(broken, varmap);
@@ -178,6 +209,7 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 
 int main()
 {
+	
 	string fileName = "first_test.txt";
 	fstream fs;
 	string s;
@@ -191,9 +223,15 @@ int main()
 		remove_whitespace(line);
 		words.push_back(line);
 	}
+	clock_t start = clock();
 	lwc::evaluate(build_lines(words));
 	fs.flush();
+	clock_t end = clock();
+	double time = (double)(end - start);
+	cout << "TIME: " << time << endl;
 	cout << "Done Reading!" << endl << endl; // let the user know we are done
 	//cin >> ends;
+	
+
 	return 0;
 }

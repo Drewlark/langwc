@@ -19,6 +19,11 @@ namespace lwc {
 		return 1;
 	}
 
+	int increment(const varset &vars) {
+		*vars[0] = *vars[0] + *vars[1];
+		return *vars[0];
+	}
+
 	int print(const varset &vars) {
 		cout << ">:  ";
 		for (variable var : vars) {
@@ -28,20 +33,64 @@ namespace lwc {
 		return 0;
 	}
 
-	int evaluate(vector<Line> linevec)
+	int is_equal(const varset &vars) {
+		const variable refvar = vars[0];
+		for (int i = 1; i < vars.size(); i++) {
+			if (*refvar != *vars[i]) {
+				return 0;
+			}
+		}
+		return 1;
+	}
+
+	int is_greaterthan(const varset &vars) {
+		variable refvar = vars[0];
+		for (int i = 1; i < vars.size(); i++) {
+			if (*refvar <= *vars[i]) {
+				return 0;
+			}
+			refvar = vars[i];
+		}
+		return 1;
+	}
+
+	int is_lessthan(const varset &vars) {
+		variable refvar = vars[0];
+		for (int i = 1; i < vars.size(); i++) {
+			if (*refvar >= *vars[i]) {
+				return 0;
+			}
+			refvar = vars[i];
+		}
+		return 1;
+	}
+
+	const int& evaluate(const vector<Line> &linevec)
 	{
 		static int last_eval = 0;
-		for (Line ln : linevec) {
+		for (const Line &ln : linevec) {
 			if (!ln.request_last)
 				last_eval = ln.func(ln.vars);
 			else
 			{
 				vector<variable> newvars = ln.vars;
+				//newvars.resize(ln.vars.size());
 				newvars.push_back(variable(new int(last_eval)));
 				last_eval = ln.func(newvars);
 			}
+			if (ln.linked_lines.size() > 0 && last_eval) {
+				
+				if (ln.loop) {
+					while (ln.func(ln.vars)) {
+						evaluate(ln.linked_lines);
+					}
+				}
+				else {
+					evaluate(ln.linked_lines);
+				}
+			}
 		}
-		return 0;
+		return last_eval;
 	}
 
 	int ret_val(const varset &vars) {
@@ -49,8 +98,17 @@ namespace lwc {
 	}
 
 	int block_run(const varset &vars) {
-		vector<Line> *func = (vector<Line>*)(*vars[0]);
+		vector<Line> *func = reinterpret_cast<vector<Line>*>(*vars[0]);
 		return evaluate(*func);
+	}
+
+	int block_run_conditional(const varset &vars) {
+		varset newvars = vars;
+		if (*vars[vars.size()-1]) {
+			newvars.pop_back();
+			return block_run(newvars);
+		}
+		return 0;
 	}
 
 	/*int func_run(const varset &vars) {
