@@ -6,25 +6,28 @@
 using namespace std;
 
 namespace lwc {
-	int add(const varset &vars) {
+	long add(const varset &vars) {
 		return *vars[0] + *vars[1];
 	}
 
-	int sub(const varset &vars) {
+	long sub(const varset &vars) {
 		return *vars[0] - *vars[1];
 	}
 
-	int assign(const varset &vars) {
+	long assign(const varset &vars) {
 		*vars[0] = *vars[1];
 		return 1;
 	}
 
-	int increment(const varset &vars) {
-		*vars[0] = *vars[0] + *vars[1];
-		return *vars[0];
+	long incrementby(const varset &vars) {
+		return (*vars[0] += *vars[1]);
 	}
 
-	int print(const varset &vars) {
+	long decrementby(const varset &vars) {
+		return (*vars[0] -= *vars[1]);
+	}
+
+	long print(const varset &vars) {
 		cout << ">:  ";
 		for (variable var : vars) {
 			cout << *var << " ";
@@ -33,9 +36,9 @@ namespace lwc {
 		return 0;
 	}
 
-	int is_equal(const varset &vars) {
+	long is_equal(const varset &vars) {
 		const variable refvar = vars[0];
-		for (int i = 1; i < vars.size(); i++) {
+		for (long i = 1; i < vars.size(); i++) {
 			if (*refvar != *vars[i]) {
 				return 0;
 			}
@@ -43,9 +46,9 @@ namespace lwc {
 		return 1;
 	}
 
-	int is_greaterthan(const varset &vars) {
+	long is_greaterthan(const varset &vars) {
 		variable refvar = vars[0];
-		for (int i = 1; i < vars.size(); i++) {
+		for (long i = 1; i < vars.size(); i++) {
 			if (*refvar <= *vars[i]) {
 				return 0;
 			}
@@ -54,20 +57,24 @@ namespace lwc {
 		return 1;
 	}
 
-	int is_lessthan(const varset &vars) {
+	/*long is_lessthan(const varset &vars) {
 		variable refvar = vars[0];
-		for (int i = 1; i < vars.size(); i++) {
+		for (long i = 1; i < vars.size(); i++) {
 			if (*refvar >= *vars[i]) {
 				return 0;
 			}
 			refvar = vars[i];
 		}
 		return 1;
+	}*/
+
+	long is_lessthan(const varset &vars) {
+		return (*vars[0] < *vars[1]);
 	}
 
-	const int& evaluate(const vector<Line> &linevec)
+	const long& evaluate(const vector<Line> &linevec)
 	{
-		static int last_eval = 0;
+		static long last_eval = 0;
 		for (const Line &ln : linevec) {
 			if (!ln.request_last)
 				last_eval = ln.func(ln.vars);
@@ -75,7 +82,7 @@ namespace lwc {
 			{
 				vector<variable> newvars = ln.vars;
 				//newvars.resize(ln.vars.size());
-				newvars.push_back(variable(new int(last_eval)));
+				newvars.push_back(variable(new long(last_eval)));
 				last_eval = ln.func(newvars);
 			}
 			if (ln.linked_lines.size() > 0 && last_eval) {
@@ -93,30 +100,17 @@ namespace lwc {
 		return last_eval;
 	}
 
-	int ret_val(const varset &vars) {
+
+	long ret_val(const varset &vars) {
 		return *vars[0];
 	}
 
-	int block_run(const varset &vars) {
-		vector<Line> *func = reinterpret_cast<vector<Line>*>(*vars[0]);
-		return evaluate(*func);
-	}
-
-	int block_run_conditional(const varset &vars) {
-		varset newvars = vars;
-		if (*vars[vars.size()-1]) {
-			newvars.pop_back();
-			return block_run(newvars);
-		}
-		return 0;
-	}
-
-	/*int func_run(const varset &vars) {
+	/*long func_run(const varset &vars) {
 		vector<Line> *func = (vector<Line>*)(*vars[0]);
 		if (vars.size() > 1) {
 			for (auto i = vars.begin() + 1; i < vars.end(); i++) {
 				varset as_vars;
-				variable n = make_shared<int>(*i);
+				variable n = make_shared<long>(*i);
 				as_vars.push_back(n);
 				func->insert(func->begin(), Line(vars));
 			}

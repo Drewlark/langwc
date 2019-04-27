@@ -4,13 +4,13 @@
 class Evaluator
 {
 	std::vector<Line> linevec;
-	int last_eval = 0;
+	long last_eval = 0;
 
 	Evaluator(std::vector<Line> _linevec) {
 		linevec = _linevec;
 	}
 
-	int Evaluate();
+	long Evaluate();
 
 };
 #endif

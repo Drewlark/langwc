@@ -10,10 +10,10 @@
 #define H_LWC_LINE
 using namespace std;
 
-typedef shared_ptr<int> variable;
+typedef shared_ptr<long> variable;
 typedef vector<variable> varset;
-using builtin_func = int(*)(const varset&);
-typedef std::unordered_map<std::string, int> dataset;
+using builtin_func = long(*)(const varset&);
+//typedef std::unordered_map<std::string, long> dataset;
 
 class Line {
 public:

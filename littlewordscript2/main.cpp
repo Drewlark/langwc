@@ -81,11 +81,11 @@ bool hasex(const string &line, const string &symbol, vector<string> &ref_vector)
 
 variable parse_symbol(const string &sym, unordered_map<string, variable> &varmap) {
 	if (is_num(sym)) {
-		return variable(new int(stoi(sym)));
+		return variable(new long(stoi(sym)));
 	}
 	else {
 		if (varmap.count(sym) == 0) {
-			variable temp = variable(new int(0));
+			variable temp = variable(new long(0));
 			varmap[sym] = temp;
 			return temp;
 		}
@@ -182,12 +182,10 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 		
 		if (test("+=")) {
 			//vector<variable> vars = lwc_get_vars(broken, varmap);
-			add_line(lwc::increment);
+			add_line(lwc::incrementby);
 		}
 		else if (test("-=")) {
-			vector<variable> vars = lwc_get_vars(broken, varmap);
-			add_line(lwc::sub);
-			built_lines.push_back(Line(vars[0], lwc::assign, true));
+			add_line(lwc::decrementby);
 		}
 		else if (test("+")) {
 			add_line(lwc::add);
@@ -214,7 +212,7 @@ int main()
 	fstream fs;
 	string s;
 	vector<string> words;
-
+	
 	cout << "Reading " << fileName << "...." << endl;
 
 	fs.open(fileName.c_str());
@@ -223,13 +221,13 @@ int main()
 		remove_whitespace(line);
 		words.push_back(line);
 	}
+	fs.flush();
 	clock_t start = clock();
 	lwc::evaluate(build_lines(words));
-	fs.flush();
 	clock_t end = clock();
 	double time = (double)(end - start);
 	cout << "TIME: " << time << endl;
-	cout << "Done Reading!" << endl << endl; // let the user know we are done
+	cout << "Done Evaluating" << endl << endl; // let the user know we are done
 	//cin >> ends;
 	
 

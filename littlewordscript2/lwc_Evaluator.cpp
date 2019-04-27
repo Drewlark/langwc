@@ -1,5 +1,5 @@
 #include "lwc_Evaluator.h"
-int Evaluator::Evaluate()
+long Evaluator::Evaluate()
 {
 	for (Line ln : linevec) {
 		if (!ln.request_last)
@@ -7,7 +7,7 @@ int Evaluator::Evaluate()
 		else
 		{
 			vector<variable> newvars = ln.vars;
-			newvars.push_back(variable(new int(last_eval)));
+			newvars.push_back(variable(new long(last_eval)));
 			ln.func(newvars);
 		}
 	}
