@@ -2,7 +2,8 @@
 
 
 Line::Line(std::vector<variable> _vars) {
-	vars = _vars; 
+	vars = _vars;
+
 };
 
 Line::Line(std::vector<variable> _vars, builtin_func _func)

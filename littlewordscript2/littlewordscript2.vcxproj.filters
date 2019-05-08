@@ -21,15 +21,9 @@
     <ClInclude Include="lwc_builtins.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lwc_Evaluator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="lwc_Evaluator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lwc_Line.cpp">

@@ -21,7 +21,7 @@ public:
 	builtin_func func;
 	bool request_last = false;
 	bool loop = false;
-	vector<Line> linked_lines;
+	vector<Line> *linked_lines = nullptr;
 
 	Line() { vars = vector<variable>();}
 	Line(std::vector<variable> _vars);
@@ -38,5 +38,5 @@ public:
 
 
 typedef vector<Line> function;
-
+typedef shared_ptr<vector<Line>> codeblock;
 #endif // !H_LWC_LINE

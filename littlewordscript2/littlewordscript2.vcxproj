@@ -116,11 +116,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="lwc_builtins.h" />
-    <ClInclude Include="lwc_Evaluator.h" />
     <ClInclude Include="lwc_Line.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lwc_Evaluator.cpp" />
     <ClCompile Include="lwc_Line.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>

@@ -6,6 +6,7 @@
 using namespace std;
 
 namespace lwc {
+
 	long add(const varset &vars) {
 		return *vars[0] + *vars[1];
 	}
@@ -85,15 +86,15 @@ namespace lwc {
 				newvars.push_back(variable(new long(last_eval)));
 				last_eval = ln.func(newvars);
 			}
-			if (ln.linked_lines.size() > 0 && last_eval) {
+			if (ln.linked_lines != nullptr && ln.linked_lines->size() > 0 && last_eval) {
 				
 				if (ln.loop) {
 					while (ln.func(ln.vars)) {
-						evaluate(ln.linked_lines);
+						evaluate((*ln.linked_lines));
 					}
 				}
 				else {
-					evaluate(ln.linked_lines);
+					evaluate((*ln.linked_lines));
 				}
 			}
 		}

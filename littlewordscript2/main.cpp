@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <unordered_map>
 #include <ctime>
+#include <unordered_map>
+#include <unordered_set>
+#include <list>
 using namespace std;
 
 vector<string> splitString(const string &s, const string &delim)
@@ -136,6 +139,7 @@ vector<string> seek_block(const vector<string> &slines, const int &start) {
 }
 
 vector<Line> build_lines(const vector<string> &slines, unordered_map<string, variable> varmap = {}) {
+	static list<vector<Line>> block_heap;
 	vector<Line> built_lines;
 	for (int lnum = 0; lnum < slines.size(); ++lnum) {
 		string line = slines[lnum];
@@ -156,7 +160,8 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 				vector<variable> vars = lwc_get_vars(broken, varmap);
 				vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_equal);
-				newl.linked_lines = built_block_lines;
+				block_heap.push_back(built_block_lines);
+				newl.linked_lines = &(block_heap.back());
 				newl.loop = isloop;
 				built_lines.push_back(newl);
 			}
@@ -164,7 +169,8 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 				vector<variable> vars = lwc_get_vars(broken, varmap);
 				vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_greaterthan);
-				newl.linked_lines = built_block_lines;
+				block_heap.push_back(built_block_lines);
+				newl.linked_lines = &(block_heap.back());
 				newl.loop = isloop;
 				built_lines.push_back(newl);
 			}
@@ -172,7 +178,8 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 				vector<variable> vars = lwc_get_vars(broken, varmap);
 				vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_lessthan);
-				newl.linked_lines = built_block_lines;
+				block_heap.push_back(built_block_lines);
+				newl.linked_lines = &(block_heap.back());
 				newl.loop = isloop;
 				built_lines.push_back(newl);
 			}
