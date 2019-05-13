@@ -1,9 +1,12 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include "lwc_typedefs.h"
 #ifndef LWC_BUILTINS
 #define LWC_BUILTINS
 using namespace std;
+
+
 
 namespace lwc {
 
@@ -77,15 +80,15 @@ namespace lwc {
 	{
 		static long last_eval = 0;
 		for (const Line &ln : linevec) {
-			if (!ln.request_last)
-				last_eval = ln.func(ln.vars);
-			else
+			//if (!ln.request_last)
+			last_eval = ln.func(ln.vars);
+			/*else
 			{
 				vector<variable> newvars = ln.vars;
 				//newvars.resize(ln.vars.size());
 				newvars.push_back(variable(new long(last_eval)));
 				last_eval = ln.func(newvars);
-			}
+			}*/
 			if (ln.linked_lines != nullptr && ln.linked_lines->size() > 0 && last_eval) {
 				
 				if (ln.loop) {

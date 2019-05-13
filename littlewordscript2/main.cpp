@@ -214,7 +214,7 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 
 int main()
 {
-	
+	clock_t start = clock();
 	string fileName = "first_test.txt";
 	fstream fs;
 	string s;
@@ -226,10 +226,11 @@ int main()
 	string line;
 	while (getline(fs, line)) {
 		remove_whitespace(line);
-		words.push_back(line);
+		if(line.size() > 0)
+			words.push_back(line);
 	}
 	fs.flush();
-	clock_t start = clock();
+	
 	lwc::evaluate(build_lines(words));
 	clock_t end = clock();
 	double time = (double)(end - start);
@@ -237,6 +238,6 @@ int main()
 	cout << "Done Evaluating" << endl << endl; // let the user know we are done
 	//cin >> ends;
 	
-
+	cin.get();
 	return 0;
 }

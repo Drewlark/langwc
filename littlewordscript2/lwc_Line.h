@@ -5,14 +5,11 @@
 #include <vector>
 #include <string>
 #include <initializer_list>
-
+#include "lwc_typedefs.h"
 #ifndef H_LWC_LINE
 #define H_LWC_LINE
 using namespace std;
 
-typedef shared_ptr<long> variable;
-typedef vector<variable> varset;
-using builtin_func = long(*)(const varset&);
 //typedef std::unordered_map<std::string, long> dataset;
 
 class Line {
@@ -22,17 +19,10 @@ public:
 	bool request_last = false;
 	bool loop = false;
 	vector<Line> *linked_lines = nullptr;
-
-	Line() { vars = vector<variable>();}
-	Line(std::vector<variable> _vars);
 	
-	Line(std::vector<variable> _vars, builtin_func);
-	
-	Line(variable _var, builtin_func _func);
+	Line(std::vector<variable> _vars, builtin_func _func, bool _reqlast = false);
 
-	Line(std::vector<variable> _vars, builtin_func _func, bool _reqlast);
-
-	Line(variable _var, builtin_func _func , bool _reqlast);
+	Line(variable _var, builtin_func _func , bool _reqlast = false);
 };
 
 

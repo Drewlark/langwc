@@ -1,0 +1,10 @@
+statically allocate memory for Line varsets.
+
+
+internal functions come packaged in class or pair with data for requested number of arguments?
+
+or 
+
+vector is resized to n+1 at compile-time and then pass only the internal array into the Line. if Line requests last then at eval time set last element to last_eval
+
+
