@@ -1,4 +1,3 @@
-#include "lwc_interpreter_typedefs.h"
 #include "lwc_Line.h"
 #include "lwc_builtins.h"
 #include <fstream>
@@ -84,7 +83,7 @@ bool hasex(const string &line, const string &symbol, vector<string> &ref_vector)
 
 variable parse_symbol(const string &sym, unordered_map<string, variable> &varmap) {
 	if (is_num(sym)) {
-		return variable(new long(stoi(sym)));
+		return variable(new long(stol(sym)));
 	}
 	else {
 		if (varmap.count(sym) == 0) {
@@ -230,8 +229,8 @@ int main()
 			words.push_back(line);
 	}
 	fs.flush();
-	
-	lwc::evaluate(build_lines(words));
+	vector<Line> final_lines = build_lines(words);
+	lwc::evaluate(final_lines);
 	clock_t end = clock();
 	double time = (double)(end - start);
 	cout << "TIME: " << time << endl;

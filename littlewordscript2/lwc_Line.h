@@ -13,8 +13,9 @@ using namespace std;
 //typedef std::unordered_map<std::string, long> dataset;
 
 class Line {
+	int n;
 public:
-	std::vector<variable> vars;
+	static_varset vars;
 	builtin_func func;
 	bool request_last = false;
 	bool loop = false;
@@ -23,6 +24,12 @@ public:
 	Line(std::vector<variable> _vars, builtin_func _func, bool _reqlast = false);
 
 	Line(variable _var, builtin_func _func , bool _reqlast = false);
+
+	~Line() { /*delete vars;*/ }
+
+	int getN() {
+		return n;
+	}
 };
 
 
