@@ -8,3 +8,16 @@ or
 vector is resized to n+1 at compile-time and then pass only the internal array into the Line. if Line requests last then at eval time set last element to last_eval
 
 
+
+a=0
+b=10
+c=12
+d=2
+
+a=(b+c)-d ->{
+
+variable x = b+c
+a = x-d
+
+
+}

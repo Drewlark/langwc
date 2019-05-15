@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <list>
+#include <map>
 using namespace std;
 //Testing git push from different machine
 vector<string> splitString(const string &s, const string &delim)
@@ -137,6 +138,23 @@ vector<string> seek_block(const vector<string> &slines, const int &start) {
 	return lines;
 }
 
+vector<string> expand_slines(vector<string> slines) { //break string lines into multiple components
+	vector<string> fin;
+	for (string& line : slines) {
+
+	}
+}
+
+vector<pair<string, builtin_func>> bin_op_table =
+{
+	{"+=", lwc::incrementby},
+	{"-=", lwc::decrementby},
+	{"+", lwc::add},
+	{"-", lwc::sub},
+	{":", lwc::print},
+	{"=", lwc::assign}
+};
+
 vector<Line> build_lines(const vector<string> &slines, unordered_map<string, variable> varmap = {}) {
 	static list<vector<Line>> block_heap;
 	vector<Line> built_lines;
@@ -186,24 +204,11 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 			continue;
 		}
 		
-		if (test("+=")) {
-			//vector<variable> vars = lwc_get_vars(broken, varmap);
-			add_line(lwc::incrementby);
-		}
-		else if (test("-=")) {
-			add_line(lwc::decrementby);
-		}
-		else if (test("+")) {
-			add_line(lwc::add);
-		}
-		else if (test("-")) {
-			add_line(lwc::sub);
-		}
-		else if (test("=")) {
-			add_line(lwc::assign);
-		}
-		else if (test(":")) {
-			add_line(lwc::print);
+		for (const auto &funcpr : bin_op_table) {
+			if (test(funcpr.first)) {
+				add_line(funcpr.second);
+				break;
+			}
 		}
 	}
 	return built_lines;
@@ -232,6 +237,7 @@ int main()
 	unordered_map<string, variable> my_varmap;
 	vector<Line> final_lines = build_lines(words, my_varmap);
 	lwc::Evaluator my_eval = lwc::Evaluator();
+	cout << "compilation complete" << endl;
 	clock_t start_eval = clock();
 	my_eval.evaluate(final_lines);
 	clock_t end = clock();
