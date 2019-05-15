@@ -41,7 +41,7 @@ public:
 	}
 
 	~static_varset() {
-		//delete data;
+		//Nothing needed here due to the fact that data is entirely composed of smart pointers
 	}
 
 	variable &operator[](const int i) {

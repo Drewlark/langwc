@@ -229,14 +229,18 @@ int main()
 			words.push_back(line);
 	}
 	fs.flush();
-	vector<Line> final_lines = build_lines(words);
-	lwc::evaluate(final_lines);
+	unordered_map<string, variable> my_varmap;
+	vector<Line> final_lines = build_lines(words, my_varmap);
+	lwc::Evaluator my_eval = lwc::Evaluator();
+	clock_t start_eval = clock();
+	my_eval.evaluate(final_lines);
 	clock_t end = clock();
-	double time = (double)(end - start);
-	cout << "TIME: " << time << endl;
-	cout << "Done Evaluating" << endl << endl; // let the user know we are done
-	//cin >> ends;
-	
-	cin.get();
+	double fulltime = (double)(end - start);
+	double evaltime = (double)(end - start_eval);
+	cout << "Done Evaluating" << endl << endl;
+	cout << "FULL RUNNING TIME: " << fulltime << endl;
+	cout << "BUILDING TIME: " << fulltime - evaltime << endl;
+	cout << "BUILT EVALUATION TIME: " << evaltime << endl;
+	getchar();
 	return 0;
 }
