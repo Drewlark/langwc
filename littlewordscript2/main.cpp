@@ -82,13 +82,13 @@ bool hasex(const string &line, const string &symbol, vector<string> &ref_vector)
 	return true;
 }
 
-variable parse_symbol(const string &sym, unordered_map<string, variable> &varmap) {
+lwc::variable parse_symbol(const string &sym, unordered_map<string, lwc::variable> &varmap) {
 	if (is_num(sym)) {
-		return variable(new long(stol(sym)));
+		return lwc::variable(new long(stol(sym)));
 	}
 	else {
 		if (varmap.count(sym) == 0) {
-			variable temp = variable(new long(0));
+			lwc::variable temp = lwc::variable(new long(0));
 			varmap[sym] = temp;
 			return temp;
 		}
@@ -98,8 +98,8 @@ variable parse_symbol(const string &sym, unordered_map<string, variable> &varmap
 	}
 }
 
-vector<variable> lwc_get_vars(const vector<string> &vars, unordered_map<string, variable> &varmap) {
-	vector<variable> realvars;
+vector<lwc::variable> lwc_get_vars(const vector<string> &vars, unordered_map<string, lwc::variable> &varmap) {
+	vector<lwc::variable> realvars;
 	for (string s : vars) {
 		if(s!="")
 			realvars.push_back(parse_symbol(s, varmap));
@@ -145,7 +145,7 @@ vector<string> expand_slines(vector<string> slines) { //break string lines into 
 	}
 }
 
-vector<pair<string, builtin_func>> bin_op_table =
+vector<pair<string, lwc::builtin_func>> bin_op_table =
 {
 	{"+=", lwc::incrementby},
 	{"-=", lwc::decrementby},
@@ -155,7 +155,7 @@ vector<pair<string, builtin_func>> bin_op_table =
 	{"=", lwc::assign}
 };
 
-vector<Line> build_lines(const vector<string> &slines, unordered_map<string, variable> varmap = {}) {
+vector<Line> build_lines(const vector<string> &slines, unordered_map<string, lwc::variable> varmap = {}) {
 	static list<vector<Line>> block_heap;
 	vector<Line> built_lines;
 	for (int lnum = 0; lnum < slines.size(); ++lnum) {
@@ -165,7 +165,7 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 			continue;
 		}
 		auto test = [&line, &broken](const string &s) {return hasex(line, s, broken); }; //lambda for hasexpression check.
-		auto add_line = [&broken, &varmap, &built_lines](builtin_func f) {built_lines.push_back(Line(lwc_get_vars(broken, varmap), f)); }; //lambda to add line to built_lines
+		auto add_line = [&broken, &varmap, &built_lines](lwc::builtin_func f) {built_lines.push_back(Line(lwc_get_vars(broken, varmap), f)); }; //lambda to add line to built_lines
 		if (line.length() >= 1 && (line[0] == '?' || line[0] == '@')) {
 			vector<string> blocklines = seek_block(slines, lnum);
 			bool isloop = false;
@@ -174,7 +174,7 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 			}
 			line = line.substr(1, line.length()-2);
 			if (test("==")) {
-				vector<variable> vars = lwc_get_vars(broken, varmap);
+				vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
 				vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_equal);
 				block_heap.push_back(built_block_lines);
@@ -183,7 +183,7 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 				built_lines.push_back(newl);
 			}
 			else if (test(">")) {
-				vector<variable> vars = lwc_get_vars(broken, varmap);
+				vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
 				vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_greaterthan);
 				block_heap.push_back(built_block_lines);
@@ -192,7 +192,7 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, var
 				built_lines.push_back(newl);
 			}
 			else if (test("<")) {
-				vector<variable> vars = lwc_get_vars(broken, varmap);
+				vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
 				vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_lessthan);
 				block_heap.push_back(built_block_lines);
@@ -234,7 +234,7 @@ int main()
 			words.push_back(line);
 	}
 	fs.flush();
-	unordered_map<string, variable> my_varmap;
+	unordered_map<string, lwc::variable> my_varmap;
 	vector<Line> final_lines = build_lines(words, my_varmap);
 	lwc::Evaluator my_eval = lwc::Evaluator();
 	cout << "compilation complete" << endl;

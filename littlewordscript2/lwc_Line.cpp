@@ -1,5 +1,7 @@
 #include "lwc_Line.h"
 #include "lwc_typedefs.h"
+using namespace lwc;
+
 Line::Line(std::vector<variable> _vars, builtin_func _func, bool _reqlast) {
 	n = _vars.size() + _reqlast;
 	static_varset test(_vars, n);

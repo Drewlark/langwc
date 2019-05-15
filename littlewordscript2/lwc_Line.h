@@ -15,15 +15,15 @@ using namespace std;
 class Line {
 	int n;
 public:
-	static_varset vars;
-	builtin_func func;
+	lwc::static_varset vars;
+	lwc::builtin_func func;
 	bool request_last = false;
 	bool loop = false;
 	vector<Line> *linked_lines = nullptr;
 	
-	Line(std::vector<variable> _vars, builtin_func _func, bool _reqlast = false);
+	Line(std::vector<lwc::variable> _vars, lwc::builtin_func _func, bool _reqlast = false);
 
-	Line(variable _var, builtin_func _func , bool _reqlast = false);
+	Line(lwc::variable _var, lwc::builtin_func _func , bool _reqlast = false);
 
 	~Line() { /*delete vars;*/ }
 

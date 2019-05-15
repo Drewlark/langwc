@@ -10,28 +10,28 @@ using namespace std;
 
 namespace lwc {
 
-	long add(static_varset &vars) {
+	long add(lwc::static_varset &vars) {
 		return *vars[0] + *vars[1];
 	}
 
-	long sub(static_varset &vars) {
+	long sub(lwc::static_varset &vars) {
 		return *vars[0] - *vars[1];
 	}
 
-	long assign(static_varset &vars) {
+	long assign(lwc::static_varset &vars) {
 		*vars[0] = *vars[1];
 		return *vars[1];
 	}
 
-	long incrementby(static_varset &vars) {
+	long incrementby(lwc::static_varset &vars) {
 		return (*vars[0] += *vars[1]);
 	}
 
-	long decrementby(static_varset &vars) {
+	long decrementby(lwc::static_varset &vars) {
 		return (*vars[0] -= *vars[1]);
 	}
 
-	long print(static_varset &vars) {
+	long print(lwc::static_varset &vars) {
 		for (int i = 0; i < vars.n; i++) {
 			cout << *vars[i] << " ";
 		}
@@ -39,15 +39,15 @@ namespace lwc {
 		return 1;
 	}
 
-	long is_equal(static_varset &vars) {
+	long is_equal(lwc::static_varset &vars) {
 		return (*vars[0] == *vars[1]);
 	}
 
-	long is_greaterthan(static_varset &vars) {
+	long is_greaterthan(lwc::static_varset &vars) {
 		return (*vars[0] > *vars[1]);
 	}
 
-	/*long is_lessthan(static_varset &vars) {
+	/*long is_lessthan(lwc::static_varset &vars) {
 		variable refvar = vars[0];
 		for (long i = 1; i < vars.size(); i++) {
 			if (*refvar >= *vars[i]) {
@@ -58,7 +58,7 @@ namespace lwc {
 		return 1;
 	}*/
 
-	long is_lessthan(static_varset &vars) {
+	long is_lessthan(lwc::static_varset &vars) {
 		return (*vars[0] < *vars[1]);
 	}
 	struct Evaluator {
@@ -91,11 +91,11 @@ namespace lwc {
 	};
 
 
-	long ret_val(static_varset &vars) {
+	long ret_val(lwc::static_varset &vars) {
 		return *vars[0];
 	}
 
-	/*long func_run(static_varset &vars) {
+	/*long func_run(lwc::static_varset &vars) {
 		vector<Line> *func = (vector<Line>*)(*vars[0]);
 		if (vars.size() > 1) {
 			for (auto i = vars.begin() + 1; i < vars.end(); i++) {
