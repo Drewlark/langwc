@@ -5,7 +5,7 @@
 #define LWC_TYPEDEF
 namespace lwc {
 	struct raw_variable {
-
+		//will contain either a numerical or Line dat
 	};
 
 
