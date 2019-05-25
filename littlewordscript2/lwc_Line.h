@@ -4,9 +4,9 @@
 #include <tuple>
 #include <vector>
 #include <string>
-#include <initializer_list>
+//#include <initializer_list>
 #include "lwc_typedefs.h"
-#ifndef H_LWC_LINE
+/*#ifndef H_LWC_LINE
 #define H_LWC_LINE
 using namespace std;
 
@@ -25,7 +25,7 @@ public:
 
 	Line(lwc::variable _var, lwc::builtin_func _func , bool _reqlast = false);
 
-	~Line() { /*delete vars;*/ }
+	~Line() { /*delete vars; }
 
 	int getN() {
 		return n;
@@ -36,4 +36,4 @@ public:
 
 typedef vector<Line> function;
 typedef shared_ptr<vector<Line>> codeblock;
-#endif // !H_LWC_LINE
+#endif // !H_LWC_LINE*/

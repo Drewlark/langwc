@@ -1,13 +1,32 @@
 #include <memory>
 #include <vector>
-
+#include <initializer_list>
 #ifndef LWC_TYPEDEF
 #define LWC_TYPEDEF
+class Line;
+class Evaluator;
 namespace lwc {
+
 	struct raw_variable {
-		//will contain either a numerical or Line dat
+		virtual long get() {}
+		raw_variable() {};
 	};
 
+	struct line_var : raw_variable {
+		Evaluator& eval;
+		const Line& line;
+		line_var(Evaluator& _eval, const Line &l) : eval(_eval), line(l) {
+		}
+		long get() {
+			eval.single_eval(line);
+		}
+	};
+
+	struct num_var : raw_variable {
+		long n;
+		num_var(long _n) : n(_n) {};
+		long get() { return n; }
+	};
 
 	typedef std::shared_ptr<long> variable;
 	typedef std::vector<variable> varset;
@@ -65,5 +84,83 @@ namespace lwc {
 	};
 
 	using builtin_func = long(*)(static_varset&);
+
+	class Line {
+		int n;
+	public:
+		lwc::static_varset vars;
+		lwc::builtin_func func;
+		bool request_last = false;
+		bool loop = false;
+		std::vector<Line>* linked_lines = nullptr;
+
+		Line(std::vector<lwc::variable> _vars, lwc::builtin_func _func, bool _reqlast = false);
+
+		Line(lwc::variable _var, lwc::builtin_func _func, bool _reqlast = false);
+
+		~Line() { /*delete vars;*/ }
+
+		int getN() {
+			return n;
+		}
+	};
+
+
+
+	typedef std::vector<Line> function;
+	typedef std::shared_ptr<std::vector<Line>> codeblock;
+	struct Evaluator {
+		long last_eval = 0;
+
+		Evaluator() {};
+
+		const long& evaluate(std::vector<Line>& linevec)
+		{
+
+			for (Line& ln : linevec) {
+				if (ln.request_last) {
+					*(ln.vars)[ln.getN() - 1] = last_eval; //set last element to the result of last operation
+				}
+				last_eval = ln.func(ln.vars);
+				if (ln.linked_lines != nullptr && ln.linked_lines->size() > 0 && last_eval) {
+
+					if (ln.loop) {
+						while (ln.func(ln.vars)) {
+							evaluate((*ln.linked_lines));
+						}
+					}
+					else {
+						evaluate((*ln.linked_lines));
+					}
+				}
+			}
+			return last_eval;
+		}
+
+		const long& single_eval(const Line &ln) {
+			if (ln.request_last) {
+				*(ln.vars)[ln.getN() - 1] = last_eval; //set last element to the result of last operation
+			}
+			last_eval = ln.func(ln.vars);
+			if (ln.linked_lines != nullptr && ln.linked_lines->size() > 0 && last_eval) {
+
+				if (ln.loop) {
+					while (ln.func(ln.vars)) {
+						evaluate((*ln.linked_lines));
+					}
+				}
+				else {
+					evaluate((*ln.linked_lines));
+				}
+			}
+			return last_eval;
+		}
+	};
 }
-#endif
+
+//typedef std::unordered_map<std::string, long> dataset;
+
+
+
+
+#endif // !H_LWC_LINE

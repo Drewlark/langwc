@@ -61,34 +61,7 @@ namespace lwc {
 	long is_lessthan(lwc::static_varset &vars) {
 		return (*vars[0] < *vars[1]);
 	}
-	struct Evaluator {
-		long last_eval = 0;
-
-		Evaluator() {};
-
-		const long& evaluate(vector<Line>& linevec)
-		{
-			
-			for (Line& ln : linevec) {
-				if (ln.request_last) {
-					*(ln.vars)[ln.getN() - 1] = last_eval; //set last element to the result of last operation
-				}
-				last_eval = ln.func(ln.vars);
-				if (ln.linked_lines != nullptr && ln.linked_lines->size() > 0 && last_eval) {
-
-					if (ln.loop) {
-						while (ln.func(ln.vars)) {
-							evaluate((*ln.linked_lines));
-						}
-					}
-					else {
-						evaluate((*ln.linked_lines));
-					}
-				}
-			}
-			return last_eval;
-		}
-	};
+	
 
 
 	long ret_val(lwc::static_varset &vars) {
