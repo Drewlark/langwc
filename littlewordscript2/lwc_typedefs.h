@@ -12,15 +12,15 @@ namespace lwc {
 		raw_variable() {};
 	};
 
-	struct line_var : raw_variable {
+	/*struct line_var : raw_variable {
 		Evaluator& eval;
-		const Line& line;
-		line_var(Evaluator& _eval, const Line &l) : eval(_eval), line(l) {
+		Line& line;
+		line_var(Evaluator& _eval, Line &l) : eval(_eval), line(l) {
 		}
 		long get() {
 			eval.single_eval(line);
 		}
-	};
+	};*/
 
 	struct num_var : raw_variable {
 		long n;
@@ -137,7 +137,7 @@ namespace lwc {
 			return last_eval;
 		}
 
-		const long& single_eval(const Line &ln) {
+		const long& single_eval(Line &ln) {
 			if (ln.request_last) {
 				*(ln.vars)[ln.getN() - 1] = last_eval; //set last element to the result of last operation
 			}

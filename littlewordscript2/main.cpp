@@ -1,4 +1,3 @@
-#include "lwc_Line.h"
 #include "lwc_builtins.h"
 #include <fstream>
 #include <iostream>
@@ -9,6 +8,7 @@
 #include <unordered_set>
 #include <list>
 #include <map>
+#include <string>
 //Testing git push from different machine
 std::vector<string> splitString(const string &s, const string &delim)
 {
@@ -154,9 +154,9 @@ std::vector<std::pair<std::string, lwc::builtin_func>> bin_op_table =
 	{"=", lwc::assign}
 };
 
-std::vector<Line> build_lines(const std::vector<std::string> &slines, unordered_map<std::string, lwc::variable> varmap = {}) {
-	static list<std::vector<Line>> block_heap;
-	std::vector<Line> built_lines;
+std::vector<lwc::Line> build_lines(const std::vector<std::string> &slines, unordered_map<std::string, lwc::variable> varmap = {}) {
+	static list<std::vector<lwc::Line>> block_heap;
+	std::vector<lwc::Line> built_lines;
 	for (int lnum = 0; lnum < slines.size(); ++lnum) {
 		std::string line = slines[lnum];
 		std::vector<std::string> broken;
@@ -164,7 +164,7 @@ std::vector<Line> build_lines(const std::vector<std::string> &slines, unordered_
 			continue;
 		}
 		auto test = [&line, &broken](const std::string &s) {return hasex(line, s, broken); }; //lambda for hasexpression check.
-		auto add_line = [&broken, &varmap, &built_lines](lwc::builtin_func f) {built_lines.push_back(Line(lwc_get_vars(broken, varmap), f)); }; //lambda to add line to built_lines
+		auto add_line = [&broken, &varmap, &built_lines](lwc::builtin_func f) {built_lines.push_back(lwc::Line(lwc_get_vars(broken, varmap), f)); }; //lambda to add line to built_lines
 		if (line.length() >= 1 && (line[0] == '?' || line[0] == '@')) {
 			std::vector<std::string> blocklines = seek_block(slines, lnum);
 			bool isloop = false;
@@ -174,8 +174,8 @@ std::vector<Line> build_lines(const std::vector<std::string> &slines, unordered_
 			line = line.substr(1, line.length()-2);
 			if (test("==")) {
 				std::vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
-				std::vector<Line> built_block_lines = build_lines(blocklines, varmap);
-				Line newl = Line(vars, lwc::is_equal);
+				std::vector<lwc::Line> built_block_lines = build_lines(blocklines, varmap);
+				lwc::Line newl = lwc::Line(vars, lwc::is_equal);
 				block_heap.push_back(built_block_lines);
 				newl.linked_lines = &(block_heap.back());
 				newl.loop = isloop;
@@ -183,8 +183,8 @@ std::vector<Line> build_lines(const std::vector<std::string> &slines, unordered_
 			}
 			else if (test(">")) {
 				std::vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
-				std::vector<Line> built_block_lines = build_lines(blocklines, varmap);
-				Line newl = Line(vars, lwc::is_greaterthan);
+				std::vector<lwc::Line> built_block_lines = build_lines(blocklines, varmap);
+				lwc::Line newl = lwc::Line(vars, lwc::is_greaterthan);
 				block_heap.push_back(built_block_lines);
 				newl.linked_lines = &(block_heap.back());
 				newl.loop = isloop;
@@ -192,8 +192,8 @@ std::vector<Line> build_lines(const std::vector<std::string> &slines, unordered_
 			}
 			else if (test("<")) {
 				std::vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
-				std::vector<Line> built_block_lines = build_lines(blocklines, varmap);
-				Line newl = Line(vars, lwc::is_lessthan);
+				std::vector<lwc::Line> built_block_lines = build_lines(blocklines, varmap);
+				lwc::Line newl = lwc::Line(vars, lwc::is_lessthan);
 				block_heap.push_back(built_block_lines);
 				newl.linked_lines = &(block_heap.back());
 				newl.loop = isloop;
@@ -227,14 +227,14 @@ int main()
 
 	fs.open(fileName.c_str());
 	std::string line;
-	while (getline(fs, line)) {
+	while (std::getline(fs, line)) {
 		remove_whitespace(line);
 		if(line.size() > 0)
 			words.push_back(line);
 	}
 	fs.flush();
 	std::unordered_map<std::string, lwc::variable> my_varmap;
-	std::vector<Line> final_lines = build_lines(words, my_varmap);
+	std::vector<lwc::Line> final_lines = build_lines(words, my_varmap);
 	lwc::Evaluator my_eval = lwc::Evaluator();
 	std::cout << "compilation complete" << std::endl;
 	std::clock_t start_eval = clock();
