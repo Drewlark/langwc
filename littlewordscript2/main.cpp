@@ -1,7 +1,7 @@
 #include "lwc_Line.h"
 #include "lwc_builtins.h"
 #include <fstream>
-#include<iostream>
+#include <iostream>
 #include <algorithm>
 #include <unordered_map>
 #include <ctime>
@@ -9,15 +9,14 @@
 #include <unordered_set>
 #include <list>
 #include <map>
-using namespace std;
 //Testing git push from different machine
-vector<string> splitString(const string &s, const string &delim)
+std::vector<string> splitString(const string &s, const string &delim)
 {
-	vector<string> ret;
-	string curr = "";
+	std::vector<string> ret;
+	std::string curr = "";
 	int i;
 	for(i=0; i<s.length()-(delim.length()-1); i++){
-		string c = s.substr(i, delim.length());
+		std::string c = s.substr(i, delim.length());
 		if (c == delim) {
 			ret.push_back(curr);
 			i += delim.length() - 1;
@@ -70,11 +69,11 @@ bool is_num(const string& s)
 }
 
 
-void remove_whitespace(string &str) {
+void remove_whitespace(std::string &str) {
 	str.erase(remove_if(str.begin(), str.end(), isspace), str.end());
 }
 
-bool hasex(const string &line, const string &symbol, vector<string> &ref_vector) {
+bool hasex(const std::string &line, const std::string &symbol, std::vector<std::string> &ref_vector) {
 	ref_vector = splitString(line, symbol);
 	if (ref_vector.size() <= 1) {
 		return false;
@@ -82,7 +81,7 @@ bool hasex(const string &line, const string &symbol, vector<string> &ref_vector)
 	return true;
 }
 
-lwc::variable parse_symbol(const string &sym, unordered_map<string, lwc::variable> &varmap) {
+lwc::variable parse_symbol(const std::string &sym, std::unordered_map<std::string, lwc::variable> &varmap) {
 	if (is_num(sym)) {
 		return lwc::variable(new long(stol(sym)));
 	}
@@ -98,30 +97,30 @@ lwc::variable parse_symbol(const string &sym, unordered_map<string, lwc::variabl
 	}
 }
 
-vector<lwc::variable> lwc_get_vars(const vector<string> &vars, unordered_map<string, lwc::variable> &varmap) {
+std::vector<lwc::variable> lwc_get_vars(const std::vector<std::string> &vars, std::unordered_map<std::string, lwc::variable> &varmap) {
 	vector<lwc::variable> realvars;
-	for (string s : vars) {
+	for (std::string s : vars) {
 		if(s!="")
 			realvars.push_back(parse_symbol(s, varmap));
 	}
 	return realvars;
 }
 
-string remove_chars(string &s, const char &c) {
+std::string remove_chars(std::string &s, const char &c) {
 	s.erase(remove(s.begin(), s.end(), c), s.end());
 	return s;
 }
 
 
-vector<string> seek_block(const vector<string> &slines, const int &start) {
+std::vector<string> seek_block(const std::vector<string> &slines, const int &start) {
 	if (slines[start][slines[start].length()-1] != '{') {
 		cout << "ERROR: Expected { at line " << start << endl;
 		throw exception();
 	}
-	vector<string> lines;
+	std::vector<std::string> lines;
 	int starts = 1;
 	for (int lnum = start+1; lnum < slines.size(); ++lnum) {
-		const string &line = slines[lnum];
+		const std::string &line = slines[lnum];
 		if (slines[lnum][slines[lnum].length() - 1] == '}') {
 			--starts;
 		}
@@ -138,14 +137,14 @@ vector<string> seek_block(const vector<string> &slines, const int &start) {
 	return lines;
 }
 
-vector<string> expand_slines(vector<string> slines) { //break string lines into multiple components
-	vector<string> fin;
-	for (string& line : slines) {
+std::vector<std::string> expand_slines(std::vector<std::string> slines) { //break string lines into multiple components
+	std::vector<std::string> fin;
+	for (std::string& line : slines) {
 
 	}
 }
 
-vector<pair<string, lwc::builtin_func>> bin_op_table =
+std::vector<std::pair<std::string, lwc::builtin_func>> bin_op_table =
 {
 	{"+=", lwc::incrementby},
 	{"-=", lwc::decrementby},
@@ -155,27 +154,27 @@ vector<pair<string, lwc::builtin_func>> bin_op_table =
 	{"=", lwc::assign}
 };
 
-vector<Line> build_lines(const vector<string> &slines, unordered_map<string, lwc::variable> varmap = {}) {
-	static list<vector<Line>> block_heap;
-	vector<Line> built_lines;
+std::vector<Line> build_lines(const std::vector<std::string> &slines, unordered_map<std::string, lwc::variable> varmap = {}) {
+	static list<std::vector<Line>> block_heap;
+	std::vector<Line> built_lines;
 	for (int lnum = 0; lnum < slines.size(); ++lnum) {
-		string line = slines[lnum];
-		vector<string> broken;
+		std::string line = slines[lnum];
+		std::vector<std::string> broken;
 		if (line.substr(0, 2) == "//" || line[0] == '}') {
 			continue;
 		}
-		auto test = [&line, &broken](const string &s) {return hasex(line, s, broken); }; //lambda for hasexpression check.
+		auto test = [&line, &broken](const std::string &s) {return hasex(line, s, broken); }; //lambda for hasexpression check.
 		auto add_line = [&broken, &varmap, &built_lines](lwc::builtin_func f) {built_lines.push_back(Line(lwc_get_vars(broken, varmap), f)); }; //lambda to add line to built_lines
 		if (line.length() >= 1 && (line[0] == '?' || line[0] == '@')) {
-			vector<string> blocklines = seek_block(slines, lnum);
+			std::vector<std::string> blocklines = seek_block(slines, lnum);
 			bool isloop = false;
 			if (line[0] == '@') {
 				isloop = true;
 			}
 			line = line.substr(1, line.length()-2);
 			if (test("==")) {
-				vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
-				vector<Line> built_block_lines = build_lines(blocklines, varmap);
+				std::vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
+				std::vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_equal);
 				block_heap.push_back(built_block_lines);
 				newl.linked_lines = &(block_heap.back());
@@ -183,8 +182,8 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, lwc
 				built_lines.push_back(newl);
 			}
 			else if (test(">")) {
-				vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
-				vector<Line> built_block_lines = build_lines(blocklines, varmap);
+				std::vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
+				std::vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_greaterthan);
 				block_heap.push_back(built_block_lines);
 				newl.linked_lines = &(block_heap.back());
@@ -192,8 +191,8 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, lwc
 				built_lines.push_back(newl);
 			}
 			else if (test("<")) {
-				vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
-				vector<Line> built_block_lines = build_lines(blocklines, varmap);
+				std::vector<lwc::variable> vars = lwc_get_vars(broken, varmap);
+				std::vector<Line> built_block_lines = build_lines(blocklines, varmap);
 				Line newl = Line(vars, lwc::is_lessthan);
 				block_heap.push_back(built_block_lines);
 				newl.linked_lines = &(block_heap.back());
@@ -218,35 +217,35 @@ vector<Line> build_lines(const vector<string> &slines, unordered_map<string, lwc
 
 int main()
 {
-	clock_t start = clock();
-	string fileName = "first_test.txt";
-	fstream fs;
-	string s;
-	vector<string> words;
+	std::clock_t start = clock();
+	std::string fileName = "first_test.txt";
+	std::fstream fs;
+	std::string s;
+	std::vector<std::string> words;
 	
-	cout << "Reading " << fileName << "...." << endl;
+	std::cout << "Reading " << fileName << "...." << std::endl;
 
 	fs.open(fileName.c_str());
-	string line;
+	std::string line;
 	while (getline(fs, line)) {
 		remove_whitespace(line);
 		if(line.size() > 0)
 			words.push_back(line);
 	}
 	fs.flush();
-	unordered_map<string, lwc::variable> my_varmap;
-	vector<Line> final_lines = build_lines(words, my_varmap);
+	std::unordered_map<std::string, lwc::variable> my_varmap;
+	std::vector<Line> final_lines = build_lines(words, my_varmap);
 	lwc::Evaluator my_eval = lwc::Evaluator();
-	cout << "compilation complete" << endl;
-	clock_t start_eval = clock();
+	std::cout << "compilation complete" << std::endl;
+	std::clock_t start_eval = clock();
 	my_eval.evaluate(final_lines);
 	clock_t end = clock();
 	double fulltime = (double)(end - start);
 	double evaltime = (double)(end - start_eval);
-	cout << "Done Evaluating" << endl << endl;
-	cout << "FULL RUNNING TIME: " << fulltime << endl;
-	cout << "BUILDING TIME: " << fulltime - evaltime << endl;
-	cout << "BUILT EVALUATION TIME: " << evaltime << endl;
+	std::cout << "Done Evaluating" << std::endl << std::endl;
+	std::cout << "FULL RUNNING TIME: " << fulltime << std::endl;
+	std::cout << "BUILDING TIME: " << fulltime - evaltime << std::endl;
+	std::cout << "BUILT EVALUATION TIME: " << evaltime << std::endl;
 	getchar();
 	return 0;
 }
