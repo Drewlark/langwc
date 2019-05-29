@@ -3,24 +3,22 @@
 #include <initializer_list>
 #ifndef LWC_TYPEDEF
 #define LWC_TYPEDEF
-class Line;
-class Evaluator;
+
 namespace lwc {
+	class Line;
+	class Evaluator;
 
 	struct raw_variable {
 		virtual long get() {}
 		raw_variable() {};
 	};
 
-	/*struct line_var : raw_variable {
-		Evaluator& eval;
-		Line& line;
-		line_var(Evaluator& _eval, Line &l) : eval(_eval), line(l) {
-		}
-		long get() {
-			eval.single_eval(line);
-		}
-	};*/
+	struct line_var : raw_variable {
+		lwc::Evaluator& eval;
+		lwc::Line& line;
+		line_var(lwc::Evaluator& _eval, Line &l) : eval(_eval), line(l) {}
+		long get();
+	};
 
 	struct num_var : raw_variable {
 		long n;

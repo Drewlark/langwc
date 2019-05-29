@@ -120,9 +120,11 @@
     <ClInclude Include="lwc_Function.h" />
     <ClInclude Include="lwc_Line.h" />
     <ClInclude Include="lwc_typedefs.h" />
+    <ClInclude Include="Parser.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lwc_Line.cpp" />
+    <ClCompile Include="lwc_typedefs.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
