@@ -103,8 +103,6 @@ namespace lwc {
 		}
 	};
 
-
-
 	typedef std::vector<Line> function;
 	typedef std::shared_ptr<std::vector<Line>> codeblock;
 	struct Evaluator {

@@ -9,6 +9,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include "Parser.h"
 //Testing git push from different machine
 std::vector<string> splitString(const string &s, const string &delim)
 {
@@ -137,12 +138,12 @@ std::vector<string> seek_block(const std::vector<string> &slines, const int &sta
 	return lines;
 }
 
-std::vector<std::string> expand_slines(std::vector<std::string> slines) { //break string lines into multiple components
+/*std::vector<std::string> expand_slines(std::vector<std::string> slines) { //break string lines into multiple components
 	std::vector<std::string> fin;
 	for (std::string& line : slines) {
 
 	}
-}
+}*/
 
 std::vector<std::pair<std::string, lwc::builtin_func>> bin_op_table =
 {
@@ -238,6 +239,9 @@ int main()
 	lwc::Evaluator my_eval = lwc::Evaluator();
 	std::cout << "compilation complete" << std::endl;
 	std::clock_t start_eval = clock();
+	/*for (int i = 0; i < 300; ++i) {
+		lwc::TokenQueue("num+=aum+(bum(2)/2)"); //Performance test for line tokenizer
+	}*/
 	my_eval.evaluate(final_lines);
 	clock_t end = clock();
 	double fulltime = (double)(end - start);
@@ -246,6 +250,7 @@ int main()
 	std::cout << "FULL RUNNING TIME: " << fulltime << std::endl;
 	std::cout << "BUILDING TIME: " << fulltime - evaltime << std::endl;
 	std::cout << "BUILT EVALUATION TIME: " << evaltime << std::endl;
+	
 	getchar();
 	return 0;
 }

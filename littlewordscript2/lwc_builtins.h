@@ -18,6 +18,14 @@ namespace lwc {
 		return *vars[0] - *vars[1];
 	}
 
+	long mult(lwc::static_varset& vars) {
+		return *vars[0] * *vars[1];
+	}
+
+	long div(lwc::static_varset& vars) {
+		return *vars[0] / *vars[1];
+	}
+
 	long assign(lwc::static_varset &vars) {
 		*vars[0] = *vars[1];
 		return *vars[1];

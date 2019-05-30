@@ -1,5 +1,5 @@
 #include "lwc_typedefs.h"
 
 long lwc::line_var::get() {
-	eval.single_eval(line);
+	return eval.single_eval(line);
 }
