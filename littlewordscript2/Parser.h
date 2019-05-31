@@ -8,6 +8,7 @@
 #include <deque>
 #include <iterator>
 #include <tuple>
+#include <deque>
 #include "lwc_typedefs.h"
 #include "lwc_builtins.h"
 #ifndef H_PARSER
@@ -36,7 +37,7 @@ namespace lwc {
 		for (char c : s) { if (!isdigit(c)) return false; }
 	}
 
-	enum class TokenType { num, op, name, lparen, rparen, func };
+	enum class TokenType { num, op, name, lparen, rparen, func, comma };
 
 	class ParseToken
 	{
@@ -57,14 +58,14 @@ namespace lwc {
 
 	class TokenQueue { //TokenQueue is an object used by the Shunting-Yard in this implementation that results in a more readable and faster Shunting-Yard
 		static enum class QState { def, op, num };
-		std::queue<lwc::ParseToken> data;
+		std::deque<lwc::ParseToken> data;
 
 		void add_unknown(std::string &unk, QState &qs) {
 			if (unk.length() > 0) {
 				if (qs == QState::num)
-					data.push(ParseToken(unk, TokenType::num));
+					data.push_back(ParseToken(unk, TokenType::num));
 				else
-					data.push(ParseToken(unk, TokenType::name));
+					data.push_back(ParseToken(unk, TokenType::name));
 				qs = QState::def;
 				unk.clear();
 			}
@@ -75,12 +76,15 @@ namespace lwc {
 			if (c == ')')
 			{
 				add_unknown(tmp, qs);
-				data.emplace(std::string(1, c), TokenType::rparen);
+				data.emplace_back(std::string(1, c), TokenType::rparen);
 				ret = true;
 			}
 			else if (c == '(') {
-				add_unknown(tmp, qs);
-				data.emplace(std::string(1, c), TokenType::lparen);
+				if (!tmp.empty()) {
+					data.push_back(ParseToken(tmp, TokenType::func));
+					tmp.clear();
+				}
+				data.emplace_back(std::string(1, c), TokenType::lparen);
 				ret = true;
 			}
 			if (ret) qs = QState::def;
@@ -95,7 +99,7 @@ namespace lwc {
 				if (isdigit(c)) {
 					if (temp.size() > 0) {
 						if (op_ids.count(temp) > 0) {
-							data.emplace(op_ids.at(temp));
+							data.emplace_back(op_ids.at(temp));
 							temp = c;
 							qs = QState::num;
 						}
@@ -109,7 +113,7 @@ namespace lwc {
 					}
 				}
 				else if (op_ids.count(temp) && !op_ids.count(temp + c)) {
-					data.emplace(op_ids.at(temp));
+					data.emplace_back(op_ids.at(temp));
 					temp.clear();
 					if (!checkparens(temp, c, qs)) {
 						temp = c;
@@ -120,6 +124,14 @@ namespace lwc {
 					add_unknown(temp, qs);
 					temp = c;
 					qs = QState::op;
+				}
+				else if (c == ',') {
+					add_unknown(temp, qs);
+					data.emplace_back(",", TokenType::comma);
+					qs = QState::def;
+				}
+				else if (c == ' ') {
+					continue;
 				}
 				else
 				{
@@ -133,7 +145,7 @@ namespace lwc {
 		ParseToken pop()
 		{
 			ParseToken temp = data.front();
-			data.pop();
+			data.pop_front();
 			return temp;
 		}
 
@@ -156,16 +168,23 @@ namespace lwc {
 			case TokenType::name:
 				out_q.push(pt);
 				break;
-
+			case TokenType::func:
+				op_stk.push(pt);
+				break;
 			case TokenType::op:
-				while (!op_stk.empty() && ((op_stk.top().tt == TokenType::op || op_stk.top().tt == TokenType::rparen) &&
+				while (!op_stk.empty() && ((op_stk.top().tt == TokenType::op) &&
 					(op_stk.top() > pt || (op_stk.top().precedence == pt.precedence && pt.leftassoc)))) {
 					out_q.push(op_stk.top());
 					op_stk.pop();
 				}
 				op_stk.push(pt);
 				break;
-
+			case TokenType::comma:
+				while (op_stk.top().tt != TokenType::lparen) {
+					out_q.push(op_stk.top());
+					op_stk.pop();
+				}
+				break;
 			case TokenType::lparen:
 				op_stk.push(pt);
 				break;
@@ -176,6 +195,10 @@ namespace lwc {
 					op_stk.pop();
 				}
 				if (op_stk.top().tt == TokenType::lparen) {
+					op_stk.pop();
+				}
+				if (!op_stk.empty()  && op_stk.top().tt == TokenType::func) {
+					out_q.push(op_stk.top());
 					op_stk.pop();
 				}
 			}

@@ -239,10 +239,7 @@ int main()
 	lwc::Evaluator my_eval = lwc::Evaluator();
 	std::cout << "compilation complete" << std::endl;
 	std::clock_t start_eval = clock();
-	/*for (int i = 0; i < 300; ++i) {
-		lwc::TokenQueue("num+=aum+(bum(2)/2)"); //Performance test for line tokenizer
-	}*/
-	my_eval.evaluate(final_lines);
+	//my_eval.evaluate(final_lines);
 	clock_t end = clock();
 	double fulltime = (double)(end - start);
 	double evaltime = (double)(end - start_eval);
@@ -250,7 +247,17 @@ int main()
 	std::cout << "FULL RUNNING TIME: " << fulltime << std::endl;
 	std::cout << "BUILDING TIME: " << fulltime - evaltime << std::endl;
 	std::cout << "BUILT EVALUATION TIME: " << evaltime << std::endl;
-	
-	getchar();
+	lwc::TokenQueue tq("1+(3+num+func(n(1), 3))");
+
+	std::queue<lwc::ParseToken> qq(lwc::shunting_yard(tq));
+	while (!qq.empty()) {
+		std::string spush = qq.front().val;
+		if (qq.front().tt == lwc::TokenType::op)
+			spush = "OP";
+		std::cout << spush  << " ";
+		qq.pop();
+	}
+	std::cout << std::endl;
+	//getchar();
 	return 0;
 }
