@@ -27,7 +27,10 @@
     <ClInclude Include="lwc_Function.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Parser.h">
+    <ClInclude Include="lwc_Evaluator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lwc_Parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

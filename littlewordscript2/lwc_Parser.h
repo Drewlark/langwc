@@ -217,5 +217,64 @@ namespace lwc {
 		return out_q;
 	}
 
+	struct TokenNode { //Node for our ParseTree
+		ParseToken data;
+		std::vector<TokenNode*> branches;
+		TokenNode(ParseToken _data, std::vector<TokenNode*> _branches = {}) : data(_data), branches(_branches) {}
+		~TokenNode() { for (TokenNode* tn : branches) { delete tn; } }
+	};
+
+
+	struct STLine { // test for new version of line
+		lwc::builtin_func func;
+		lwc::varset varset;
+		lwc::variable leaf_var = nullptr;
+		STLine(lwc::varset sv, lwc::builtin_func _func): varset(sv), func(_func) {}
+	};
+
+	struct LineNode {
+		lwc::STLine* line;
+		std::vector<LineNode> links;
+	};
+
+	struct LAST { //"Line" abstract syntax tree
+		TokenNode* root;
+
+		LAST(std::queue<ParseToken> tq) { //Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
+			std::stack<TokenNode*> pds; //any nodes not yet childed to an operator are pushed here
+			while (!tq.empty()) {
+				ParseToken pt = ParseToken(tq.front());
+				tq.pop();
+				if (pt.tt == TokenType::op) { //When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
+					std::vector<TokenNode*> temp;
+					for (int i = 0; i < 2; ++i) { //Operators always consume two tokens
+						temp.push_back(pds.top());
+						pds.pop();
+					}
+					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
+					pds.push(new TokenNode(pt, temp)); //create and push operator node with operand children
+				}
+				else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemeloolnted
+					std::vector<TokenNode*> temp;
+					for (int i = 0; i < 3; ++i) { 
+						temp.push_back(pds.top());
+						pds.pop();
+					}
+					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
+					pds.push(new TokenNode(pt, temp)); //create and push operator node with operand children
+				}
+				else {
+					pds.push(new TokenNode(pt)); //if not an operator, push to pds
+				}
+			}
+			root = pds.top(); //remaining node is the root
+		}
+
+		~LAST() {
+			delete root;
+		}
+	};
 }
+
+
 #endif

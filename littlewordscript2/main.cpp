@@ -9,7 +9,8 @@
 #include <list>
 #include <map>
 #include <string>
-#include "Parser.h"
+#include "lwc_Parser.h"
+#include "lwc_Evaluator.h"
 //Testing git push from different machine
 std::vector<string> splitString(const string &s, const string &delim)
 {
