@@ -1,7 +1,8 @@
 #include "lwc_typedefs.h"
 #include "lwc_Parser.h"
-#ifndef H_LWC_EVALUATOR
 #define H_LWC_EVALUATOR
+#ifndef H_LWC_EVALUATOR
+
 namespace lwc {
 	struct Evaluator {
 		long last_eval = 0;

@@ -10,36 +10,40 @@ using namespace std;
 
 namespace lwc {
 
-	long add(lwc::static_varset &vars) {
-		return *vars[0] + *vars[1];
+	long add(lwc::varset &vars) {
+		return 1;
+		//return (*vars[0] + *vars[1]).get();
 	}
 
-	long sub(lwc::static_varset &vars) {
-		return *vars[0] - *vars[1];
+	long sub(lwc::varset &vars) {
+		return 1;
+		//return (*vars[0] + *vars[1]).get();
 	}
 
-	long mult(lwc::static_varset& vars) {
-		return *vars[0] * *vars[1];
+	long mult(lwc::varset& vars) {
+		return 1;
+		//return (*vars[0] + *vars[1]).get();
 	}
 
-	long div(lwc::static_varset& vars) {
-		return *vars[0] / *vars[1];
+	long div(lwc::varset& vars) {
+		return 1;
+		//return (*vars[0] + *vars[1]).get();
 	}
 
-	long assign(lwc::static_varset &vars) {
+	/*long assign(lwc::varset &vars) {
 		*vars[0] = *vars[1];
-		return *vars[1];
+		return *vars[1].get();
 	}
 
-	long incrementby(lwc::static_varset &vars) {
+	long incrementby(lwc::varset &vars) {
 		return (*vars[0] += *vars[1]);
 	}
 
-	long decrementby(lwc::static_varset &vars) {
+	long decrementby(lwc::varset &vars) {
 		return (*vars[0] -= *vars[1]);
 	}
 
-	long print(lwc::static_varset &vars) {
+	long print(lwc::varset &vars) {
 		for (int i = 0; i < vars.n; i++) {
 			cout << *vars[i] << " ";
 		}
@@ -47,33 +51,24 @@ namespace lwc {
 		return 1;
 	}
 
-	long is_equal(lwc::static_varset &vars) {
+	long is_equal(lwc::varset &vars) {
 		return (*vars[0] == *vars[1]);
 	}
 
-	long is_greaterthan(lwc::static_varset &vars) {
+	long is_greaterthan(lwc::varset &vars) {
 		return (*vars[0] > *vars[1]);
 	}
 
-	/*long is_lessthan(lwc::static_varset &vars) {
-		variable refvar = vars[0];
-		for (long i = 1; i < vars.size(); i++) {
-			if (*refvar >= *vars[i]) {
-				return 0;
-			}
-			refvar = vars[i];
-		}
-		return 1;
-	}*/
+	
 
-	long is_lessthan(lwc::static_varset &vars) {
+	long is_lessthan(lwc::varset &vars) {
 		return (*vars[0] < *vars[1]);
 	}
 	
 
 
-	long ret_val(lwc::static_varset &vars) {
-		return *vars[0];
+	long ret_val(lwc::varset &vars) {
+		return vars[0]->get();
 	}
 
 	/*long func_run(lwc::static_varset &vars) {

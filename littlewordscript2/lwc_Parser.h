@@ -9,6 +9,7 @@
 #include <iterator>
 #include <tuple>
 #include <deque>
+#include <memory>
 #include "lwc_typedefs.h"
 #include "lwc_builtins.h"
 #ifndef H_PARSER
@@ -23,13 +24,11 @@ namespace lwc {
 		OperatorIdentity(lwc::builtin_func _fnc, bool _leftassoc, uint8_t _precedence) : fnc(_fnc), leftassoc(_leftassoc), precedence(_precedence) {};
 	};
 
-	const std::unordered_map<std::string, OperatorIdentity> op_ids = {
+	std::unordered_map<std::string, OperatorIdentity> op_ids = {
 		{"+", OperatorIdentity(lwc::add, 0, 0)},
 		{"*", OperatorIdentity(lwc::mult, 0, 1)},
 		{"-", OperatorIdentity(lwc::sub, 1, 0)},
-		{"/", OperatorIdentity(lwc::div, 1, 1)},
-		{"+=", OperatorIdentity(lwc::incrementby, 1, 0)},
-		{"-=", OperatorIdentity(lwc::decrementby, 1, 0)}
+		{"/", OperatorIdentity(lwc::div, 1, 1)}
 	};
 
 	bool is_num(const std::string& s)
@@ -56,7 +55,7 @@ namespace lwc {
 	};
 
 
-	class TokenQueue { //TokenQueue is an object used by the Shunting-Yard in this implementation that results in a more readable and faster Shunting-Yard
+	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
 		static enum class QState { def, op, num };
 		std::deque<lwc::ParseToken> data;
 
@@ -227,44 +226,64 @@ namespace lwc {
 
 	struct STLine { // test for new version of line
 		lwc::builtin_func func;
-		lwc::varset varset;
+		std::vector<lwc::variable> varset;
 		lwc::variable leaf_var = nullptr;
 		STLine(lwc::varset sv, lwc::builtin_func _func): varset(sv), func(_func) {}
 	};
 
 	struct LineNode {
-		lwc::STLine* line;
-		std::vector<LineNode> links;
+		builtin_func func = nullptr;
+		std::vector<LineNode*> branches;
+		variable var = nullptr;
+		bool is_leaf = false;
+		LineNode(builtin_func _func, std::vector<LineNode*> _branches = {}) : func(_func), branches(_branches) {}
+		LineNode(variable _var) : var(_var) { is_leaf = true; }
 	};
 
+	lwc::variable convert_symbol(const std::string& sym, std::unordered_map<std::string, lwc::variable>& varmap) {
+		if (is_num(sym)) {
+			return std::make_shared<lwc::num_var>(long(stol(sym)));
+		}
+		else {
+			if (varmap.count(sym) == 0) {
+				lwc::n_variable temp = std::make_shared<lwc::num_var>(long(0));
+				varmap[sym] = temp;
+				return temp;
+			}
+			else {
+				return varmap[sym];
+			}
+		}
+	}
+	std::unordered_map<std::string, lwc::variable> global; //temporary situation
 	struct LAST { //"Line" abstract syntax tree
-		TokenNode* root;
+		LineNode* root;
 
-		LAST(std::queue<ParseToken> tq) { //Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
-			std::stack<TokenNode*> pds; //any nodes not yet childed to an operator are pushed here
+		LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& global) { //Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
+			std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
 			while (!tq.empty()) {
 				ParseToken pt = ParseToken(tq.front());
 				tq.pop();
 				if (pt.tt == TokenType::op) { //When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
-					std::vector<TokenNode*> temp;
+					std::vector<LineNode*> temp;
 					for (int i = 0; i < 2; ++i) { //Operators always consume two tokens
 						temp.push_back(pds.top());
 						pds.pop();
 					}
 					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-					pds.push(new TokenNode(pt, temp)); //create and push operator node with operand children
+					pds.push(new LineNode(pt.opfunc, temp)); //create and push operator node with operand children
 				}
 				else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemeloolnted
-					std::vector<TokenNode*> temp;
+					std::vector<LineNode*> temp;
 					for (int i = 0; i < 3; ++i) { 
 						temp.push_back(pds.top());
 						pds.pop();
 					}
 					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-					pds.push(new TokenNode(pt, temp)); //create and push operator node with operand children
+					pds.push(new LineNode(pt.opfunc, temp)); //create and push operator node with operand children
 				}
 				else {
-					pds.push(new TokenNode(pt)); //if not an operator, push to pds
+					pds.push(new LineNode(convert_symbol(pt.val, global))); //if not an operator, push to pds
 				}
 			}
 			root = pds.top(); //remaining node is the root

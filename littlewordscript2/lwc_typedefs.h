@@ -8,25 +8,39 @@ namespace lwc {
 	class Line;
 	class Evaluator;
 
-	struct raw_variable {
-		virtual long get() {}
-		raw_variable() {};
+	struct base_variable {
+		virtual long get() const { return 0; }
+		base_variable() {};
+		virtual base_variable operator+(const base_variable& bv) { return base_variable(); }
+		virtual base_variable operator-(const base_variable& bv) { return base_variable(); }
+		virtual base_variable operator*(const base_variable& bv) { return base_variable(); }
+		virtual base_variable operator/(const base_variable& bv) { return base_variable(); }
+		virtual void operator=(const base_variable& bv) {}
 	};
 
-	struct line_var : raw_variable {
+	struct line_var : base_variable {
 		lwc::Evaluator& eval;
 		lwc::Line& line;
 		line_var(lwc::Evaluator& _eval, Line &l) : eval(_eval), line(l) {}
-		long get();
+		long get() const {};
 	};
 
-	struct num_var : raw_variable {
+	struct num_var : base_variable {
+	protected:
 		long n;
+	public:
 		num_var(long _n) : n(_n) {};
-		long get() { return n; }
+		long get() const { return n; };
+		operator long() const { return n; }
+		base_variable operator+(const base_variable& bv) { return num_var(n + bv.get());}
+		base_variable operator-(const base_variable& bv) { return num_var(n - bv.get()); }
+		base_variable operator*(const base_variable& bv) { return num_var(n * bv.get()); }
+		base_variable operator/(const base_variable& bv) { return num_var(n / bv.get()); }
+		virtual void operator=(const base_variable& bv) { n = bv.get(); }
 	};
 
-	typedef std::shared_ptr<long> variable;
+	typedef std::shared_ptr<base_variable> variable;
+	typedef std::shared_ptr<num_var> n_variable;
 	typedef std::vector<variable> varset;
 
 
@@ -81,7 +95,7 @@ namespace lwc {
 
 	};
 
-	using builtin_func = long(*)(static_varset&);
+	using builtin_func = long(*)(lwc::varset&);
 
 	class Line {
 		int n;
