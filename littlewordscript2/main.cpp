@@ -119,15 +119,8 @@ int main()
 
 	std::queue<lwc::ParseToken> qq(lwc::shunting_yard(tq));
 	lwc::LAST mylast(qq, lwc::global);
-	
-	while (!qq.empty()) {
-		std::string spush = qq.front().val;
-		if (qq.front().tt == lwc::TokenType::op)
-			spush = "OP";
-		std::cout << spush  << " ";
-		qq.pop();
-	}
-	
+	lwc::variable myvar = lwc::evaluate_line(mylast.root);
+	std::cout << "OUTPUT: " << myvar->get() << endl;
 	std::cout << std::endl;
 	//getchar();
 	return 0;

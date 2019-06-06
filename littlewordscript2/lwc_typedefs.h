@@ -1,5 +1,6 @@
 #include <memory>
 #include <vector>
+#include <sstream>
 #include <initializer_list>
 #ifndef LWC_TYPEDEF
 #define LWC_TYPEDEF
@@ -7,6 +8,8 @@
 namespace lwc {
 	class Line;
 	class Evaluator;
+
+	struct num_var;
 
 	struct base_variable {
 		virtual long get() const { return 0; }
@@ -16,6 +19,7 @@ namespace lwc {
 		virtual base_variable operator*(const base_variable& bv) { return base_variable(); }
 		virtual base_variable operator/(const base_variable& bv) { return base_variable(); }
 		virtual void operator=(const base_variable& bv) {}
+		virtual std::stringstream repr() { std::stringstream ss; return ss; };
 	};
 
 	struct line_var : base_variable {
@@ -29,6 +33,8 @@ namespace lwc {
 	protected:
 		long n;
 	public:
+		num_var() : n(0) {};
+		num_var(base_variable bv) : n(bv.get()) {};
 		num_var(long _n) : n(_n) {};
 		long get() const { return n; };
 		operator long() const { return n; }
@@ -36,14 +42,18 @@ namespace lwc {
 		base_variable operator-(const base_variable& bv) { return num_var(n - bv.get()); }
 		base_variable operator*(const base_variable& bv) { return num_var(n * bv.get()); }
 		base_variable operator/(const base_variable& bv) { return num_var(n / bv.get()); }
-		virtual void operator=(const base_variable& bv) { n = bv.get(); }
+		void operator=(const base_variable& bv) { n = bv.get(); }
+		std::stringstream repr() { std::stringstream ss; ss << n; return ss;}
 	};
-
-	typedef std::shared_ptr<base_variable> variable;
-	typedef std::shared_ptr<num_var> n_variable;
+	typedef base_variable* variable;
+	typedef num_var* n_variable;
 	typedef std::vector<variable> varset;
 
+	/*struct block_var : base_variable {
+		vector<LAST> line_bois;
+	};*/
 
+	
 
 	struct static_varset {
 
@@ -95,8 +105,7 @@ namespace lwc {
 
 	};
 
-	using builtin_func = long(*)(lwc::varset&);
-
+	using builtin_func = base_variable*(*)(lwc::varset&);
 	class Line {
 		int n;
 	public:

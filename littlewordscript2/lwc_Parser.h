@@ -54,6 +54,16 @@ namespace lwc {
 		bool operator<=(const ParseToken& pt) { return precedence <= pt.precedence; }
 	};
 
+	class BaseFunction {
+		bool is_builtin = true;
+	public:
+		BaseFunction(std::unordered_map<std::string, lwc::variable>& varmap, std::string name) {
+			if (varmap.count(name) > 0) {
+				is_builtin = false;
+			}
+
+		}
+	};
 
 	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
 		static enum class QState { def, op, num };
@@ -242,11 +252,11 @@ namespace lwc {
 
 	lwc::variable convert_symbol(const std::string& sym, std::unordered_map<std::string, lwc::variable>& varmap) {
 		if (is_num(sym)) {
-			return std::make_shared<lwc::num_var>(long(stol(sym)));
+			return new lwc::num_var(long(stol(sym)));
 		}
 		else {
 			if (varmap.count(sym) == 0) {
-				lwc::n_variable temp = std::make_shared<lwc::num_var>(long(0));
+				lwc::n_variable temp = new lwc::num_var(long(0));
 				varmap[sym] = temp;
 				return temp;
 			}
@@ -275,7 +285,7 @@ namespace lwc {
 				}
 				else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemeloolnted
 					std::vector<LineNode*> temp;
-					for (int i = 0; i < 3; ++i) { 
+					for (int i = 0; i < 3; ++i) { //must fix
 						temp.push_back(pds.top());
 						pds.pop();
 					}
@@ -293,7 +303,54 @@ namespace lwc {
 			delete root;
 		}
 	};
+
+
+	/*double eval_tree(const TokenNode* tn) {
+		if (tn->data.tt == TokenType::op) {
+			if (mathmap.count(tn->data.val)) {
+				std::vector<double> res;
+				for (TokenNode* t : tn->branches) {
+					res.push_back(eval_tree(t));
+				}
+				return mathmap[tn->data.val](res);
+			}
+		}
+		else if (tn->data.tt == TokenType::func) {
+			std::vector<double> res;
+			for (TokenNode* t : tn->branches) {
+				res.push_back(eval_tree(t));
+			}
+			return foobar(res);
+		}
+		else {
+			return atol(tn->data.val.c_str());
+		}
+	}*/
+
+	lwc::base_variable* evaluate_line(lwc::LineNode* node) {
+		if (node->is_leaf) {
+			std::cout << node->var->get();
+			return node->var;
+		}
+		else {
+			vector<base_variable*> vars;
+			for (LineNode* ln : node->branches) {
+				vars.push_back(evaluate_line(ln));
+			}
+			lwc::variable v(node->func(vars));
+			return v;
+		}
+	}
+
+	lwc::variable evaluate_lines(vector<lwc::LAST> lines) {
+		lwc::variable var = new base_variable();
+		for (LAST line : lines) {
+			var = evaluate_line(line.root);
+		}
+		return var;
+	}
 }
+
 
 
 #endif

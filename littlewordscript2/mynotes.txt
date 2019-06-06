@@ -31,4 +31,6 @@ func = lwc::func_call
 data = {func_variable, arguments (in num_variable form) ...}
 }
 
+
+---------
 Braces are used to define a block or func variable. Any branching will use a similar system, calling in to a function.

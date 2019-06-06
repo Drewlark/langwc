@@ -6,36 +6,37 @@
 #define LWC_BUILTINS
 using namespace std;
 
-
+	
 
 namespace lwc {
 
-	long add(lwc::varset &vars) {
-		return 1;
-		//return (*vars[0] + *vars[1]).get();
+	//variable mk_num_var() {};
+
+	base_variable* add(lwc::varset &vars) {
+		return new num_var(vars[0]->get() + vars[1]->get());
 	}
 
-	long sub(lwc::varset &vars) {
-		return 1;
-		//return (*vars[0] + *vars[1]).get();
+	base_variable* sub(lwc::varset& vars) {
+		return new num_var(vars[0]->get() - vars[1]->get());
 	}
 
-	long mult(lwc::varset& vars) {
-		return 1;
-		//return (*vars[0] + *vars[1]).get();
+	base_variable* mult(lwc::varset& vars) {
+		return new num_var(vars[0]->get() * vars[1]->get());
 	}
 
-	long div(lwc::varset& vars) {
-		return 1;
-		//return (*vars[0] + *vars[1]).get();
+	base_variable* div(lwc::varset& vars) {
+		return new num_var(vars[0]->get() / vars[1]->get());
 	}
 
-	/*long assign(lwc::varset &vars) {
+
+	/*variable assign(lwc::varset &vars) {
 		*vars[0] = *vars[1];
-		return *vars[1].get();
+		return vars[1].get();
 	}
 
-	long incrementby(lwc::varset &vars) {
+
+
+	/*long incrementby(lwc::varset &vars) {
 		return (*vars[0] += *vars[1]);
 	}
 
