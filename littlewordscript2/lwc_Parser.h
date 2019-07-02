@@ -38,6 +38,8 @@ namespace lwc {
 
 	enum class TokenType { num, op, name, lparen, rparen, func, comma };
 
+	struct LAST;
+
 	class ParseToken
 	{
 	public:
@@ -45,6 +47,7 @@ namespace lwc {
 		TokenType tt;
 		int precedence; //meaningless if tt is not TokenType::op
 		bool leftassoc = false;
+		bool has_brace = false;
 		builtin_func opfunc = nullptr;
 		ParseToken(std::string _val, TokenType _tt, int _precedence = 0, bool _leftassoc = 0) : val(_val), tt(_tt), precedence(_precedence), leftassoc(_leftassoc) {};
 		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc) {}; //No value is possible here because the string value is irrelevant to an op
@@ -68,7 +71,7 @@ namespace lwc {
 	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
 		static enum class QState { def, op, num };
 		std::deque<lwc::ParseToken> data;
-
+		bool brace_end = false;
 		void add_unknown(std::string &unk, QState &qs) {
 			if (unk.length() > 0) {
 				if (qs == QState::num)
@@ -101,6 +104,7 @@ namespace lwc {
 		}
 
 	public:
+		
 		TokenQueue(std::string s) {
 			std::string temp = "";
 			QState qs = QState::def;
@@ -142,6 +146,17 @@ namespace lwc {
 				else if (c == ' ') {
 					continue;
 				}
+				else if (c == '{') {
+					if (!data.empty() && data.back().tt == TokenType::rparen)
+						data.back().has_brace = true;
+				}
+				else if (c == '}') {
+					if (temp.size() > 0) {
+						add_unknown(temp, qs);
+					}
+					brace_end = true;
+					qs = QState::def;
+				}
 				else
 				{
 					if(!checkparens(temp, c, qs))
@@ -159,6 +174,8 @@ namespace lwc {
 		}
 
 		bool empty() { return data.empty(); }
+
+		bool brace_end() { return brace_end; }
 	};
 
 	std::queue<ParseToken> shunting_yard(TokenQueue tq) //Actual Shunting-Yard algorithm. output is the output queue
@@ -246,6 +263,7 @@ namespace lwc {
 		std::vector<LineNode*> branches;
 		variable var = nullptr;
 		bool is_leaf = false;
+		std::vector<LAST> output_block;
 		LineNode(builtin_func _func, std::vector<LineNode*> _branches = {}) : func(_func), branches(_branches) {}
 		LineNode(variable _var) : var(_var) { is_leaf = true; }
 	};
@@ -265,10 +283,13 @@ namespace lwc {
 			}
 		}
 	}
-	std::unordered_map<std::string, lwc::variable> global; //temporary situation
+
+	std::unordered_map<std::string, lwc::variable> global; //HACK: eventually pass through global scope
 	struct LAST { //"Line" abstract syntax tree
 		LineNode* root;
-
+		uint8_t block_ends = 0;
+		uint8_t block_starts = 0;
+		std::vector<LAST>* output = nullptr;
 		LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& global) { //Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
 			std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
 			while (!tq.empty()) {
@@ -283,14 +304,18 @@ namespace lwc {
 					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
 					pds.push(new LineNode(pt.opfunc, temp)); //create and push operator node with operand children
 				}
-				else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemeloolnted
+				else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemented
 					std::vector<LineNode*> temp;
-					for (int i = 0; i < 3; ++i) { //must fix
+					for (int i = 0; i < 3; ++i) { //TODO: let functions work for proper number of parameters
 						temp.push_back(pds.top());
 						pds.pop();
 					}
+					LineNode* fln = new LineNode(pt.opfunc, temp);
+					if (pt.has_brace) {
+						output = &fln->output_block;
+					}
 					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-					pds.push(new LineNode(pt.opfunc, temp)); //create and push operator node with operand children
+					pds.push(fln); //create and push operator node with operand children
 				}
 				else {
 					pds.push(new LineNode(convert_symbol(pt.val, global))); //if not an operator, push to pds
@@ -348,6 +373,12 @@ namespace lwc {
 			var = evaluate_line(line.root);
 		}
 		return var;
+	}
+
+	std::vector<LAST> parse_from_slines(std::vector<std::string> slines) {
+		std::stack<std::vector<LAST>> blockstack;
+		blockstack.push(std::vector<LAST>());
+		
 	}
 }
 

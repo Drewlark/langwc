@@ -34,3 +34,8 @@ data = {func_variable, arguments (in num_variable form) ...}
 
 ---------
 Braces are used to define a block or func variable. Any branching will use a similar system, calling in to a function.
+
+:
+
+TO ACQUIRE BLOCKS:
+simply identify function calls and check if they have a { if they do, then give their branches a reference to the new codeblock object, then push this reference onto a stack. next time } is found, complete the codeblock and pop its reference off the stack
