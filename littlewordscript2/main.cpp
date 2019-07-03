@@ -87,14 +87,14 @@ bool hasex(const std::string &line, const std::string &symbol, std::vector<std::
 int main()
 {
 	std::clock_t start = clock();
-	std::string fileName = "first_test.txt";
+	std::string file_name = "first_test.txt";
 	std::fstream fs;
 	std::string s;
 	std::vector<std::string> words;
 	
-	std::cout << "Reading " << fileName << "...." << std::endl;
+	std::cout << "Reading " << file_name << "...." << std::endl;
 
-	fs.open(fileName.c_str());
+	fs.open(file_name.c_str());
 	std::string line;
 	while (std::getline(fs, line)) {
 		remove_whitespace(line);
@@ -103,24 +103,20 @@ int main()
 	}
 	fs.flush();
 	std::unordered_map<std::string, lwc::variable> my_varmap;
-	//std::vector<lwc::Line> final_lines = build_lines(words, my_varmap);
-	//lwc::Evaluator my_eval = lwc::Evaluator();
+	std::vector<lwc::LAST> root_scope(*lwc::parse_from_slines(words));
 	std::cout << "compilation complete" << std::endl;
+
 	std::clock_t start_eval = clock();
-	//my_eval.evaluate(final_lines);
+	lwc::evaluate_lines(root_scope);
 	clock_t end = clock();
+
 	double fulltime = (double)(end - start);
 	double evaltime = (double)(end - start_eval);
 	std::cout << "Done Evaluating" << std::endl << std::endl;
 	std::cout << "FULL RUNNING TIME: " << fulltime << std::endl;
 	std::cout << "BUILDING TIME: " << fulltime - evaltime << std::endl;
 	std::cout << "BUILT EVALUATION TIME: " << evaltime << std::endl;
-	lwc::TokenQueue tq("(1*2)+(6/2)+9");
-
-	std::queue<lwc::ParseToken> qq(lwc::shunting_yard(tq));
-	lwc::LAST mylast(qq, lwc::global);
-	lwc::variable myvar = lwc::evaluate_line(mylast.root);
-	std::cout << "OUTPUT: " << myvar->get() << endl;
+	
 	std::cout << std::endl;
 	//getchar();
 	return 0;

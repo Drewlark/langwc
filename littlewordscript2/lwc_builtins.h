@@ -12,22 +12,25 @@ namespace lwc {
 
 	//variable mk_num_var() {};
 
-	base_variable* add(lwc::varset &vars) {
-		return new num_var(vars[0]->get() + vars[1]->get());
+	BaseVariable* add(lwc::varset &vars) {
+		return new NumVar(vars[0]->get() + vars[1]->get());
 	}
 
-	base_variable* sub(lwc::varset& vars) {
-		return new num_var(vars[0]->get() - vars[1]->get());
+	BaseVariable* sub(lwc::varset& vars) {
+		return new NumVar(vars[0]->get() - vars[1]->get());
 	}
 
-	base_variable* mult(lwc::varset& vars) {
-		return new num_var(vars[0]->get() * vars[1]->get());
+	BaseVariable* mult(lwc::varset& vars) {
+		return new NumVar(vars[0]->get() * vars[1]->get());
 	}
 
-	base_variable* div(lwc::varset& vars) {
-		return new num_var(vars[0]->get() / vars[1]->get());
+	BaseVariable* div(lwc::varset& vars) {
+		return new NumVar(vars[0]->get() / vars[1]->get());
 	}
 
+	BaseVariable* while_loop(lwc::varset& vars) {
+		//????
+	}
 
 	/*variable assign(lwc::varset &vars) {
 		*vars[0] = *vars[1];

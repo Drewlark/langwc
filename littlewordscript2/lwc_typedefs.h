@@ -9,44 +9,37 @@ namespace lwc {
 	class Line;
 	class Evaluator;
 
-	struct num_var;
+	struct NumVar;
 
-	struct base_variable {
+	struct BaseVariable {
 		virtual long get() const { return 0; }
-		base_variable() {};
-		virtual base_variable operator+(const base_variable& bv) { return base_variable(); }
-		virtual base_variable operator-(const base_variable& bv) { return base_variable(); }
-		virtual base_variable operator*(const base_variable& bv) { return base_variable(); }
-		virtual base_variable operator/(const base_variable& bv) { return base_variable(); }
-		virtual void operator=(const base_variable& bv) {}
+		BaseVariable() {};
+		virtual BaseVariable operator+(const BaseVariable& bv) { return BaseVariable(); }
+		virtual BaseVariable operator-(const BaseVariable& bv) { return BaseVariable(); }
+		virtual BaseVariable operator*(const BaseVariable& bv) { return BaseVariable(); }
+		virtual BaseVariable operator/(const BaseVariable& bv) { return BaseVariable(); }
+		virtual void operator=(const BaseVariable& bv) {}
 		virtual std::stringstream repr() { std::stringstream ss; return ss; };
 	};
 
-	struct line_var : base_variable {
-		lwc::Evaluator& eval;
-		lwc::Line& line;
-		line_var(lwc::Evaluator& _eval, Line &l) : eval(_eval), line(l) {}
-		long get() const {};
-	};
-
-	struct num_var : base_variable {
+	struct NumVar : BaseVariable {
 	protected:
 		long n;
 	public:
-		num_var() : n(0) {};
-		num_var(base_variable bv) : n(bv.get()) {};
-		num_var(long _n) : n(_n) {};
+		NumVar() : n(0) {};
+		NumVar(BaseVariable bv) : n(bv.get()) {};
+		NumVar(long _n) : n(_n) {};
 		long get() const { return n; };
 		operator long() const { return n; }
-		base_variable operator+(const base_variable& bv) { return num_var(n + bv.get());}
-		base_variable operator-(const base_variable& bv) { return num_var(n - bv.get()); }
-		base_variable operator*(const base_variable& bv) { return num_var(n * bv.get()); }
-		base_variable operator/(const base_variable& bv) { return num_var(n / bv.get()); }
-		void operator=(const base_variable& bv) { n = bv.get(); }
+		BaseVariable operator+(const BaseVariable& bv) { return NumVar(n + bv.get());}
+		BaseVariable operator-(const BaseVariable& bv) { return NumVar(n - bv.get()); }
+		BaseVariable operator*(const BaseVariable& bv) { return NumVar(n * bv.get()); }
+		BaseVariable operator/(const BaseVariable& bv) { return NumVar(n / bv.get()); }
+		void operator=(const BaseVariable& bv) { n = bv.get(); }
 		std::stringstream repr() { std::stringstream ss; ss << n; return ss;}
 	};
-	typedef base_variable* variable;
-	typedef num_var* n_variable;
+	typedef BaseVariable* variable;
+	typedef NumVar* n_variable;
 	typedef std::vector<variable> varset;
 
 	/*struct block_var : base_variable {
@@ -55,7 +48,7 @@ namespace lwc {
 
 	
 
-	struct static_varset {
+	struct static_varset { //deprecated
 
 	public:
 		int n;
@@ -105,7 +98,7 @@ namespace lwc {
 
 	};
 
-	using builtin_func = base_variable*(*)(lwc::varset&);
+	using builtin_func = BaseVariable*(*)(lwc::varset&);
 	class Line {
 		int n;
 	public:
