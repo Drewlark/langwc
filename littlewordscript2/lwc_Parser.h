@@ -178,8 +178,6 @@ namespace lwc {
 		}
 
 		bool empty() { return data.empty(); }
-
-		bool brace_end() { return brace_end; }
 	};
 
 	std::queue<ParseToken> shunting_yard(TokenQueue tq) //Actual Shunting-Yard algorithm. output is the output queue
@@ -270,6 +268,7 @@ namespace lwc {
 		std::vector<LAST> output_block;
 		LineNode(builtin_func _func, std::vector<LineNode*> _branches = {}) : func(_func), branches(_branches) {}
 		LineNode(variable _var) : var(_var) { is_leaf = true; }
+		LineNode() { is_leaf = true; }
 	};
 
 	lwc::variable convert_symbol(const std::string& sym, std::unordered_map<std::string, lwc::variable>& varmap) {
@@ -293,7 +292,7 @@ namespace lwc {
 		LineNode* root;
 		uint8_t block_ends = 0;
 		uint8_t block_starts = 0;
-		std::vector<LAST>* outblock = nullptr;
+		LineNode* block_node = nullptr;
 		LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& global) { //Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
 			std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
 			while (!tq.empty()) {
@@ -316,7 +315,7 @@ namespace lwc {
 					}
 					LineNode* fln = new LineNode(pt.opfunc, temp);
 					if (pt.brace_start) {
-						outblock = &fln->output_block;
+						block_node = fln;
 						block_starts += 1;
 					}
 					else if (pt.brace_end) {
@@ -379,38 +378,47 @@ namespace lwc {
 		lwc::variable var = new BaseVariable();
 		for (LAST line : lines) {
 			var = evaluate_line(line.root);
-			if (line.outblock && var) {
-				evaluate_lines(*line.outblock);
-			}
 		}
 		return var;
 	}
 
+	typedef std::vector<LAST> block_func;
+
+	class CodeBlockVariable : public BaseVariable //variable wrapping a vector of type LAST
+	{
+		block_func code_block;
+	public:
+		CodeBlockVariable(block_func _code_block) : code_block(_code_block) {}
+		long get()
+		{
+			return evaluate_lines(code_block)->get();
+		}
+	};
+
 
 	
-	std::shared_ptr<std::vector<LAST>> parse_from_slines(std::vector<std::string> slines) {
-		typedef std::shared_ptr<std::vector<LAST>> block_func;
+	block_func parse_from_slines(std::vector<std::string> slines) {
 		std::stack<block_func> blockstack;
-		block_func main_scope = block_func(new std::vector<LAST>);
+		block_func main_scope;
 		blockstack.push(main_scope);
 		for (std::string sline : slines) {
 			TokenQueue tq(sline);
 			LAST temp_last(shunting_yard(tq), global);
-			blockstack.top()->push_back(temp_last);
-			if (temp_last.block_starts) {
-				blockstack.push(block_func(blockstack.top()->back().outblock));
+			blockstack.top().push_back(temp_last);
+			LineNode* bnode = temp_last.block_node;
+			if (bnode) {
+				blockstack.emplace();
 			}
 			else if (temp_last.block_ends) {
+				CodeBlockVariable *cbv = new CodeBlockVariable(blockstack.top());
 				blockstack.pop();
+				LineNode *ln = new LineNode(cbv);
+				bnode->branches.push_back(ln);
 			}
 		}
 		return main_scope;
 	}
 
-	struct CodeBlockVariable : BaseVariable //variable wrapping a vector of type LAST
-	{
-
-	};
 
 }
 

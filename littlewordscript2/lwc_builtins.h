@@ -29,7 +29,10 @@ namespace lwc {
 	}
 
 	BaseVariable* while_loop(lwc::varset& vars) {
-		//????
+		while (vars[0]->get()) {
+			vars[1]->get();
+		}
+		return vars[0];
 	}
 
 	/*variable assign(lwc::varset &vars) {
