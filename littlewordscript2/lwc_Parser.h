@@ -30,7 +30,8 @@ namespace lwc {
 		{"-", OperatorIdentity(lwc::sub, 1, 0)},
 		{"/", OperatorIdentity(lwc::div, 1, 1)},
 		{"=", OperatorIdentity(lwc::assign, 0, -2)},
-		{"<", OperatorIdentity(lwc::is_lessthan, 0, -1)}
+		{"<", OperatorIdentity(lwc::is_lessthan, 0, -1)},
+		{"+=", OperatorIdentity(lwc::incrementby, 0, -2)}
 	};
 
 	struct BuiltInIdentity {
@@ -58,7 +59,7 @@ namespace lwc {
 
 	struct LineNode;
 
-	lwc::BaseVariable* evaluate_line(lwc::LineNode* node);
+	lwc::variable evaluate_line(lwc::LineNode* node);
 
 	class ParseToken
 	{
@@ -100,6 +101,7 @@ namespace lwc {
 		std::deque<lwc::ParseToken> data;
 		
 		void add_unknown(std::string &unk, QState &qs) {
+			//std::cout << "unk: " << unk << endl;
 			if (unk.length() > 0) {
 				if (qs == QState::num)
 					data.push_back(ParseToken(unk, TokenType::num));
@@ -170,7 +172,7 @@ namespace lwc {
 						qs = QState::def;
 					}
 				}
-				else if (op_ids.count(std::string(1, c))) {
+				else if (op_ids.count(std::string(1, c)) && !op_ids.count(temp+c)) {
 					add_unknown(temp, qs);
 					temp = c;
 					qs = QState::op;
@@ -324,18 +326,18 @@ namespace lwc {
 		}
 	};
 
-	lwc::variable convert_symbol(const std::string& sym, std::unordered_map<std::string, lwc::variable>& varmap) {
-		if (is_num(sym)) {
-			return new lwc::NumVar(long(stol(sym)));
+	lwc::variable convert_symbol(const ParseToken &pt, std::unordered_map<std::string, lwc::variable>& varmap) {
+		if (pt.tt == TokenType::num) {
+			return std::make_shared<NumVar>(long(stol(pt.val)));
 		}
 		else {
-			if (varmap.count(sym) == 0) {
-				lwc::n_variable temp = new lwc::NumVar(long(0));
-				varmap[sym] = temp;
+			if (varmap.count(pt.val) == 0) {
+				lwc::n_variable temp = std::make_shared<NumVar>(long(0));
+				varmap[pt.val] = temp;
 				return temp;
 			}
 			else {
-				return varmap[sym];
+				return varmap[pt.val];
 			}
 		}
 	}
@@ -377,10 +379,11 @@ namespace lwc {
 				}
 				else if (pt.tt == TokenType::elastic) {
 					LAST l = LAST(shunting_yard(TokenQueue(pt.val)), global);
-					pds.push(new LineNode(new LASTVariable(l.root)));
+					pds.push(new LineNode(std::make_shared<LASTVariable>(l.root)));
 				}
 				else {
-					pds.push(new LineNode(convert_symbol(pt.val, global))); //if not an operator, push to pds
+					//std::cout << "whats up" << pt.val << " " <<convert_symbol(pt, global)->get() << " " << is_num(pt.val) << std::endl;
+					pds.push(new LineNode(convert_symbol(pt, global))); //if not an operator, push to pds				
 				}
 			}
 			if (!pds.empty()) {
@@ -393,22 +396,21 @@ namespace lwc {
 		}
 	};
 
-	lwc::BaseVariable* evaluate_line(lwc::LineNode* node) {
-		if (!node->func) {
+	inline lwc::variable evaluate_line(lwc::LineNode* node) {
+		if (node->is_leaf) {
 			return node->var;
 		}
 		else {
-			vector<BaseVariable*> vars;
+			vector<variable> vars;
 			for (LineNode* ln : node->branches) {
 				vars.push_back(evaluate_line(ln));
 			}
-			lwc::variable v(node->func(vars));
-			return v;
+			return lwc::variable(node->func(vars));
 		}
 	}
 
 	lwc::variable evaluate_lines(vector<lwc::LAST> lines) {
-		lwc::variable var = new BaseVariable();
+		lwc::variable var =std::make_shared<BaseVariable>();
 		for (LAST line : lines) {
 			var = evaluate_line(line.root);
 		}
@@ -449,7 +451,7 @@ namespace lwc {
 				bnodes.push(bnode);
 			}
 			else if (tq.brace_end) {
-				CodeBlockVariable *cbv = new CodeBlockVariable(blockstack.top());
+				std::shared_ptr<CodeBlockVariable> cbv = std::make_shared<CodeBlockVariable>(blockstack.top());
 				blockstack.pop();
 				LineNode *ln = new LineNode(cbv);
 				bnodes.top()->branches.push_back(ln);

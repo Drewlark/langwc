@@ -38,8 +38,8 @@ namespace lwc {
 		void operator=(const BaseVariable& bv) { n = bv.get(); }
 		std::stringstream repr() { std::stringstream ss; ss << n; return ss;}
 	};
-	typedef BaseVariable* variable;
-	typedef NumVar* n_variable;
+	typedef std::shared_ptr<BaseVariable> variable;
+	typedef std::shared_ptr<NumVar> n_variable;
 	typedef std::vector<variable> varset;
 
 	/*struct block_var : base_variable {
@@ -96,7 +96,7 @@ namespace lwc {
 
 	};
 
-	using builtin_func = BaseVariable*(*)(lwc::varset&);
+	using builtin_func = variable(*)(lwc::varset&);
 	class Line {
 		int n;
 	public:
