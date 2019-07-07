@@ -46,8 +46,6 @@ namespace lwc {
 		vector<LAST> line_bois;
 	};*/
 
-	
-
 	struct static_varset { //deprecated
 
 	public:

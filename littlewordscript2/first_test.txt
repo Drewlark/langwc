@@ -1,6 +1,6 @@
 a=0
-b=20000000
-while(a<b){
- a+=1
+b=20
+while(`a<b`){
+ a=a+1
 }
-:a
+print(a)

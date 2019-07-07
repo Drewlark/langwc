@@ -7,7 +7,7 @@
 using namespace std;
 
 	
-
+//ahhhhhhhhhh terrible memory leaks... will have to change this to use shared_ptrs or evaluate if returning rvalues is okay
 namespace lwc {
 
 	//variable mk_num_var() {};
@@ -35,12 +35,19 @@ namespace lwc {
 		return vars[0];
 	}
 
-	/*variable assign(lwc::varset &vars) {
+	variable assign(lwc::varset &vars) {
 		*vars[0] = *vars[1];
-		return vars[1].get();
+		return vars[1];
 	}
 
+	variable is_lessthan(lwc::varset& vars) {
+		return new NumVar(vars[0]->get() < vars[1]->get());
+	}
 
+	variable print(lwc::varset& vars) {
+		cout << vars[0]->get() << endl;
+		return nullptr;
+	}
 
 	/*long incrementby(lwc::varset &vars) {
 		return (*vars[0] += *vars[1]);
@@ -68,9 +75,7 @@ namespace lwc {
 
 	
 
-	long is_lessthan(lwc::varset &vars) {
-		return (*vars[0] < *vars[1]);
-	}
+	
 	
 
 

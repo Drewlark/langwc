@@ -103,7 +103,7 @@ int main()
 	}
 	fs.flush();
 	std::unordered_map<std::string, lwc::variable> my_varmap;
-	std::vector<lwc::LAST> root_scope(*lwc::parse_from_slines(words));
+	std::vector<lwc::LAST> root_scope(lwc::parse_from_slines(words));
 	std::cout << "compilation complete" << std::endl;
 
 	std::clock_t start_eval = clock();
