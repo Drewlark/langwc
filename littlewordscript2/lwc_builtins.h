@@ -9,7 +9,6 @@ using namespace std;
 
 #define make_num std::make_shared<NumVar> 
 
-//ahhhhhhhhhh terrible memory leaks... will have to change this to use shared_ptrs or evaluate if returning rvalues is okay
 namespace lwc {
 
 	//variable mk_num_var() {};
