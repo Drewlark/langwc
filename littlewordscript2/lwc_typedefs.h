@@ -12,12 +12,13 @@ namespace lwc {
 	struct NumVar;
 
 	struct BaseVariable {
-		virtual long get() const { return 0; }
+		virtual long get() { return 0; }
 		BaseVariable() {};
-		virtual BaseVariable operator+(const BaseVariable& bv) { return BaseVariable(); }
-		virtual BaseVariable operator-(const BaseVariable& bv) { return BaseVariable(); }
-		virtual BaseVariable operator*(const BaseVariable& bv) { return BaseVariable(); }
-		virtual BaseVariable operator/(const BaseVariable& bv) { return BaseVariable(); }
+		virtual BaseVariable operator+( BaseVariable& bv) { return BaseVariable(); }
+		virtual BaseVariable operator-( BaseVariable& bv) { return BaseVariable(); }
+		virtual BaseVariable operator*( BaseVariable& bv) { return BaseVariable(); }
+		virtual BaseVariable operator/( BaseVariable& bv) { return BaseVariable(); }
+		virtual void operator=(BaseVariable& bv) {}
 		virtual void operator=(const BaseVariable& bv) {}
 		virtual std::stringstream repr() { std::stringstream ss; return ss; };
 	};
@@ -29,13 +30,13 @@ namespace lwc {
 		NumVar() : n(0) {};
 		NumVar(BaseVariable bv) : n(bv.get()) {};
 		NumVar(long _n) : n(_n) {};
-		long get() const { return n; };
+		long get()  { return n; };
 		operator long() const { return n; }
-		BaseVariable operator+(const BaseVariable& bv) { return NumVar(n + bv.get());}
-		BaseVariable operator-(const BaseVariable& bv) { return NumVar(n - bv.get()); }
-		BaseVariable operator*(const BaseVariable& bv) { return NumVar(n * bv.get()); }
-		BaseVariable operator/(const BaseVariable& bv) { return NumVar(n / bv.get()); }
-		void operator=(const BaseVariable& bv) { n = bv.get(); }
+		BaseVariable operator+( BaseVariable& bv) { return NumVar(n + bv.get());}
+		BaseVariable operator-( BaseVariable& bv) { return NumVar(n - bv.get()); }
+		BaseVariable operator*( BaseVariable& bv) { return NumVar(n * bv.get()); }
+		BaseVariable operator/( BaseVariable& bv) { return NumVar(n / bv.get()); }
+		void operator=( BaseVariable& bv) { n = bv.get(); }
 		std::stringstream repr() { std::stringstream ss; ss << n; return ss;}
 	};
 	typedef std::shared_ptr<BaseVariable> variable;
@@ -95,8 +96,74 @@ namespace lwc {
 
 
 	};
+	
+	struct _AllVal {
+		variable lval;
+		BaseVariable rval;
+		_AllVal() : lval{} { }
+		~_AllVal() {};
+	};
 
-	using builtin_func = variable(*)(lwc::varset&);
+	struct AllVal {
+		
+		int type = 0;
+		_AllVal _av;
+		AllVal(variable _lval) { 
+			type = 0; 
+			_av.lval = _lval; 
+		}
+		AllVal(BaseVariable _rval) {
+			type = 1; 
+			_av.rval = _rval; 
+		}
+		AllVal() {};
+		
+		AllVal& operator=(const AllVal& av) 
+		{
+			type = av.type;
+			if (av.type) {
+				_av.rval = av._av.rval;
+				return *this;
+			}
+			_av.lval = av._av.lval;
+			return *this;
+		}
+
+		long get() {
+			if (type)
+				return _av.rval.get();
+			return _av.lval->get();
+		}
+
+		BaseVariable & getbv() {
+			if (type)
+				return _av.rval;
+			return *_av.lval;
+		}
+
+		variable &getv() {
+			if (type) {
+				_av.lval = std::make_shared<BaseVariable>(_av.rval);
+				type = 0;
+			}
+			return _av.lval;
+		}
+	};
+
+	/*using builtin_lfunc = variable(*)(AllVal*, const int &argc);
+	using builtin_rfunc = BaseVariable(*)(AllVal*, const int& argc);
+
+	union builtin_func {
+		builtin_lfunc lfunc = nullptr;
+		builtin_rfunc rfunc;
+		builtin_func(builtin_lfunc _lfunc) : lfunc(_lfunc) {}
+		builtin_func(builtin_rfunc _rfunc) : rfunc(_rfunc) {}
+		builtin_func() {};
+	};*/
+
+	using builtin_func = variable(*)(variable*, const int& argc);
+
+
 	class Line {
 		int n;
 	public:

@@ -13,47 +13,55 @@ namespace lwc {
 
 	//variable mk_num_var() {};
 
-	variable add(lwc::varset &vars) {
-		return std::make_shared<NumVar>(vars[0]->get() + vars[1]->get());
+	variable add(variable* vars, const int& argc) {
+		return make_num( (vars[0]->get() + vars[1]->get()) );
 	}
 
-	variable sub(lwc::varset& vars) {
-		return std::make_shared<NumVar>(vars[0]->get() - vars[1]->get());
+	variable sub(variable* vars, const int& argc) {
+		return make_num(vars[0]->get() - vars[1]->get());
 	}
 
-	variable mult(lwc::varset& vars) {
-		return std::make_shared<NumVar>(vars[0]->get() * vars[1]->get());
+	variable mult(variable* vars, const int& argc) {
+		return make_num(vars[0]->get() * vars[1]->get());
 	}
 
-	variable div(lwc::varset& vars) {
-		return std::make_shared<NumVar>(vars[0]->get() / vars[1]->get());
+	variable div(variable* vars, const int& argc) {
+		return make_num(vars[0]->get() / vars[1]->get());
 	}
 
-	variable while_loop(lwc::varset& vars) {
+	variable while_loop(variable* vars, const int& argc) {
 		while (vars[0]->get()) {
 			vars[1]->get();
 		}
 		return vars[0];
 	}
 
-	variable assign(lwc::varset &vars) {
+	variable assign(variable* vars, const int& argc) {
+		//std::cout << 
 		*vars[0] = *vars[1];
 		return vars[1];
 	}
 
-	variable is_lessthan(lwc::varset& vars) {
-		return std::make_shared<NumVar>(vars[0]->get() < vars[1]->get());
+	variable is_lessthan(variable* vars, const int& argc) {
+		return make_num(vars[0]->get() < vars[1]->get());
 	}
 
-	variable print(lwc::varset& vars) {
+	variable print(variable* vars, const int& argc) {
 		cout << vars[0]->get() << endl;
 		return vars[0];
 	}
 
-	variable incrementby(lwc::varset &vars) {
-		*vars[0] = (*vars[0] + *vars[1]);
+	/*static const std::unordered_map<lwc::builtin_func, bool> rval = {
+		{}
+	};
+
+
+	/*variable incrementby(lwc::variable* vars, const int& argc) {
+		vars[0] = (*vars[0] + *vars[1]);
 		return vars[0];
 	}
+
+
 	/*
 	long decrementby(lwc::varset &vars) {
 		return (*vars[0] -= *vars[1]);

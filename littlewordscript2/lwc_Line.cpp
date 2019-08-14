@@ -2,7 +2,7 @@
 #include "lwc_typedefs.h"
 using namespace lwc;
 
-lwc::Line::Line(std::vector<variable> _vars, builtin_func _func, bool _reqlast) {
+/*lwc::Line::Line(std::vector<variable> _vars, builtin_func _func, bool _reqlast) {
 	n = _vars.size() + _reqlast;
 	static_varset test(_vars, n);
 	vars = test;
@@ -17,3 +17,4 @@ lwc::Line::Line(variable _var, builtin_func _func, bool _reqlast) {
 	func = _func;
 	request_last = _reqlast;
 };
+*/

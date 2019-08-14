@@ -39,7 +39,7 @@ int main()
 	std::string line;
 	while (std::getline(fs, line)) {
 		remove_whitespace(line);
-		if(line.size() > 0)
+		if(line.size() > 0 && line[0] != '#')
 			words.push_back(line);
 	}
 	fs.flush();

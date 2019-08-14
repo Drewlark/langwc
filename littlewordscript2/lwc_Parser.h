@@ -10,6 +10,7 @@
 #include <tuple>
 #include <deque>
 #include <memory>
+#include <array>
 #include "lwc_typedefs.h"
 #include "lwc_builtins.h"
 #ifndef H_PARSER
@@ -21,29 +22,31 @@ namespace lwc {
 		lwc::builtin_func fnc;
 		bool leftassoc = false;
 		int8_t precedence = 0;
-		OperatorIdentity(lwc::builtin_func _fnc, bool _leftassoc, int8_t _precedence) : fnc(_fnc), leftassoc(_leftassoc), precedence(_precedence) {};
+		bool rval = false;
+		OperatorIdentity(lwc::builtin_func _fnc, bool _leftassoc, int8_t _precedence, bool _rval=false) : fnc(_fnc), leftassoc(_leftassoc), precedence(_precedence), rval(_rval){};
+		OperatorIdentity() {};
 	};
 
 	std::unordered_map<std::string, OperatorIdentity> op_ids = {
-		{"+", OperatorIdentity(lwc::add, 0, 0)},
-		{"*", OperatorIdentity(lwc::mult, 0, 1)},
-		{"-", OperatorIdentity(lwc::sub, 1, 0)},
-		{"/", OperatorIdentity(lwc::div, 1, 1)},
-		{"=", OperatorIdentity(lwc::assign, 0, -2)},
-		{"<", OperatorIdentity(lwc::is_lessthan, 0, -1)},
-		{"+=", OperatorIdentity(lwc::incrementby, 0, -2)}
+		{"+", OperatorIdentity(builtin_func(lwc::add), 0, 0, true)},
+		{"*", OperatorIdentity(builtin_func(lwc::mult), 0, 1, true)},
+		{"-", OperatorIdentity(builtin_func(lwc::sub), 1, 0, true)},
+		{"/", OperatorIdentity(builtin_func(lwc::div), 1, 1, true)},
+		{"=", OperatorIdentity(builtin_func(lwc::assign), 0, -2, true)},
+		{"<", OperatorIdentity(builtin_func(lwc::is_lessthan), 0, -1, true)}
 	};
 
 	struct BuiltInIdentity {
-		lwc::builtin_func fnc = nullptr;
+		lwc::builtin_func fnc;
 		int arg_count = 1;
-		BuiltInIdentity(lwc::builtin_func _fnc, int _arg_count = 1) : fnc(_fnc), arg_count(_arg_count) {}
-		BuiltInIdentity() {};
+		bool rval = false;
+		BuiltInIdentity(lwc::builtin_func _fnc, int _arg_count = 1, bool _rval = false) : fnc(_fnc), arg_count(_arg_count), rval(_rval) {}
+		BuiltInIdentity(){};
 	};
 
 	std::unordered_map<std::string, BuiltInIdentity> func_ids = {
-		{"while", BuiltInIdentity(lwc::while_loop)},
-		{"print", BuiltInIdentity(lwc::print)}
+		{"while", BuiltInIdentity(builtin_func(lwc::while_loop))},
+		{"print", BuiltInIdentity(builtin_func(lwc::print))}
 	};
 
 	bool is_num(const std::string& s)
@@ -70,12 +73,17 @@ namespace lwc {
 		bool leftassoc = false;
 		bool brace_start = false;
 		bool brace_end = false;
-		builtin_func opfunc = nullptr;
+		builtin_func opfunc;
 		int argn = 0;
-		ParseToken(std::string _val, TokenType _tt, int _precedence = 0, bool _leftassoc = 0) : val(_val), tt(_tt), precedence(_precedence), leftassoc(_leftassoc) {
+		bool rval = false;
+		ParseToken(std::string _val, TokenType _tt, int _precedence = 0, bool _leftassoc = 0, bool _rval = false) : val(_val), tt(_tt), precedence(_precedence), leftassoc(_leftassoc), rval(_rval) {
 			if (tt == TokenType::func && func_ids.count(val)) {
 				opfunc = func_ids[val].fnc;
 				argn = func_ids[val].arg_count;
+				rval = func_ids[val].rval;
+			}
+			else if (tt == TokenType::op) {
+				rval = op_ids[val].rval;
 			}
 		}
 		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc) {}; //No value is possible here because the string value is irrelevant to an op
@@ -302,15 +310,40 @@ namespace lwc {
 		STLine(lwc::varset sv, lwc::builtin_func _func): varset(sv), func(_func) {}
 	};
 
-	struct LineNode {
-		builtin_func func = nullptr;
+	class LineNode {
 		std::vector<LineNode*> branches;
+	public:
+		builtin_func func;
+		bool rval = false;
 		variable var = variable();
 		bool is_leaf = false;
 		std::vector<LAST> output_block;
-		LineNode(builtin_func _func, std::vector<LineNode*> _branches = {}) : func(_func), branches(_branches) {}
+		variable* arg_arr = nullptr;
+		int sz = 0;
+
+		void fit_args() {
+			delete[] arg_arr;
+			branches.shrink_to_fit();
+			sz = branches.size();
+			arg_arr = new variable[sz];
+		}
+
+		LineNode(builtin_func _func, std::vector<LineNode*> _branches = {}, bool rval = false) : func(_func), branches(_branches) 
+		{ 
+			fit_args();
+		}
 		LineNode(variable _var) : var(_var) { is_leaf = true; }
 		LineNode() { is_leaf = true; }
+		~LineNode() { delete[] arg_arr; }
+
+		void add_branch(LineNode* ln) {
+			branches.push_back(ln);
+			fit_args();
+		}
+
+		LineNode* get_branch(int index) {
+			return branches[index];
+		}
 	};
 
 	class LASTVariable : public BaseVariable //variable wrapping a vector of type LAST
@@ -318,11 +351,10 @@ namespace lwc {
 		std::shared_ptr<LineNode> linenode;
 	public:
 		LASTVariable(LineNode* _linenode) : linenode(_linenode) {}
-		long get() const
+		long get()
 		{
-			long a = evaluate_line(linenode.get())->get();
 			//std::cout << "CALLING IN" << a << std::endl;
-			return a;
+			return evaluate_line(linenode.get())->get();
 		}
 	};
 
@@ -360,7 +392,7 @@ namespace lwc {
 						pds.pop();
 					}
 					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-					pds.push(new LineNode(pt.opfunc, temp)); //create and push operator node with operand children
+					pds.push(new LineNode(pt.opfunc, temp, pt.rval)); //create and push operator node with operand children
 				}
 				else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemented
 					std::vector<LineNode*> temp;
@@ -369,7 +401,7 @@ namespace lwc {
 						pds.pop();
 					}
 					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-					LineNode* fln = new LineNode(pt.opfunc, temp);
+					LineNode* fln = new LineNode(pt.opfunc, temp, pt.rval);
 					if (pt.brace_start) {
 						block_node = fln;
 						block_starts += 1;
@@ -396,23 +428,29 @@ namespace lwc {
 		}
 	};
 
-	inline lwc::variable evaluate_line(lwc::LineNode* node) {
-		if (node->is_leaf) {
-			return node->var;
-		}
-		else {
-			vector<variable> vars;
-			for (LineNode* ln : node->branches) {
-				vars.push_back(evaluate_line(ln));
+
+
+
+	lwc::variable evaluate_line(lwc::LineNode * const node) {
+
+		for (int i = 0; i < node->sz ; ++i) {
+			if (node->get_branch(i)->is_leaf) {
+				node->arg_arr[i] = node->get_branch(i)->var;
 			}
-			return lwc::variable(node->func(vars));
+			else {
+				node->arg_arr[i] = evaluate_line(node->get_branch(i));
+			}
 		}
+		return node->func(node->arg_arr, node->sz);
 	}
 
-	lwc::variable evaluate_lines(vector<lwc::LAST> lines) {
-		lwc::variable var =std::make_shared<BaseVariable>();
-		for (LAST line : lines) {
-			var = evaluate_line(line.root);
+	lwc::variable evaluate_lines(vector<lwc::LAST> &lines) {
+		lwc::variable var;
+		for (int i = 0; i < lines.size();++i) {
+			if(i<lines.size()-1)
+				evaluate_line(lines[i].root);
+			else
+				var = evaluate_line(lines[i].root);
 		}
 		return var;
 	}
@@ -423,8 +461,8 @@ namespace lwc {
 	{
 		block_func code_block;
 	public:
-		CodeBlockVariable(block_func _code_block) : code_block(_code_block) {}
-		long get() const
+		CodeBlockVariable(block_func &_code_block) : code_block(_code_block) {}
+		long get()
 		{
 			return evaluate_lines(code_block)->get();
 		}
@@ -454,7 +492,7 @@ namespace lwc {
 				std::shared_ptr<CodeBlockVariable> cbv = std::make_shared<CodeBlockVariable>(blockstack.top());
 				blockstack.pop();
 				LineNode *ln = new LineNode(cbv);
-				bnodes.top()->branches.push_back(ln);
+				bnodes.top()->add_branch(ln);
 				bnodes.pop();
 			}
 		}
