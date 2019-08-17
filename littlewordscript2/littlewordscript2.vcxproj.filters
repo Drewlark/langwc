@@ -15,19 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="lwc_Line.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="lwc_builtins.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lwc_typedefs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lwc_Function.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lwc_Evaluator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lwc_Parser.h">
@@ -38,17 +29,8 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lwc_Line.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="lwc_typedefs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\..\scripto\scripto\littlescript.txt">
-      <Filter>Source Files</Filter>
-    </Text>
     <Text Include="first_test.txt">
       <Filter>Source Files</Filter>
     </Text>

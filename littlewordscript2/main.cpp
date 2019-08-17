@@ -10,7 +10,6 @@
 #include <map>
 #include <string>
 #include "lwc_Parser.h"
-#include "lwc_Evaluator.h"
 //Testing git push from different machine
 
 bool is_num(const string& s)
