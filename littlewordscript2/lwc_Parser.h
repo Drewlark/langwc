@@ -13,6 +13,9 @@
 #include <array>
 #include "lwc_typedefs.h"
 #include "lwc_builtins.h"
+#include "lwc_RegisterStore.h"
+
+
 #ifndef H_PARSER
 #define H_PARSER
 //TODO break this up into multiple files...
@@ -23,30 +26,36 @@ namespace lwc {
 		bool leftassoc = false;
 		int8_t precedence = 0;
 		bool rval = false;
-		OperatorIdentity(lwc::builtin_func _fnc, bool _leftassoc, int8_t _precedence, bool _rval=false) : fnc(_fnc), leftassoc(_leftassoc), precedence(_precedence), rval(_rval){};
+		RegisterType* rt = nullptr;
+		OperatorIdentity(lwc::builtin_func _fnc, bool _leftassoc,
+			int8_t _precedence, bool _rval=false, RegisterType *_rt = nullptr) : fnc(_fnc), leftassoc(_leftassoc), precedence(_precedence), rval(_rval),rt(_rt) {};
 		OperatorIdentity() {};
+		~OperatorIdentity() {};
 	};
 
-	std::unordered_map<std::string, OperatorIdentity> op_ids = {
-		{"+", OperatorIdentity(builtin_func(lwc::add), 0, 0, true)},
-		{"*", OperatorIdentity(builtin_func(lwc::mult), 0, 1, true)},
-		{"-", OperatorIdentity(builtin_func(lwc::sub), 1, 0, true)},
-		{"/", OperatorIdentity(builtin_func(lwc::div), 1, 1, true)},
-		{"=", OperatorIdentity(builtin_func(lwc::assign), 0, -2, true)},
-		{"<", OperatorIdentity(builtin_func(lwc::is_lessthan), 0, -1, true)}
+	static const std::unordered_map<std::string, OperatorIdentity> op_ids = {
+		{"+", OperatorIdentity(builtin_func(lwc::add), 0, 0, true, new TypeImpl<NumVar>())}, //TODO temporary solution to statically define return types.
+		{"*", OperatorIdentity(builtin_func(lwc::mult), 0, 1, true, new TypeImpl<NumVar>())},
+		{"-", OperatorIdentity(builtin_func(lwc::sub), 1, 0, true, new TypeImpl<NumVar>())},
+		{"/", OperatorIdentity(builtin_func(lwc::div), 1, 1, true, new TypeImpl<NumVar>())},
+		{"=", OperatorIdentity(builtin_func(lwc::assign), 0, -2, true, new TypeImpl<NumVar>())},
+		{"<", OperatorIdentity(builtin_func(lwc::is_lessthan), 0, -1, true, new TypeImpl<NumVar>())},
+		{"+=", OperatorIdentity(builtin_func(lwc::incrementby), 0, -2, true, new TypeImpl<NumVar>())}
 	};
 
 	struct BuiltInIdentity {
 		lwc::builtin_func fnc;
 		int arg_count = 1;
 		bool rval = false;
-		BuiltInIdentity(lwc::builtin_func _fnc, int _arg_count = 1, bool _rval = false) : fnc(_fnc), arg_count(_arg_count), rval(_rval) {}
+		RegisterType* rt;
+		BuiltInIdentity(lwc::builtin_func _fnc, RegisterType* _rt, int _arg_count = 1, bool _rval = false ) : fnc(_fnc), arg_count(_arg_count), rval(_rval), rt(_rt) {}
 		BuiltInIdentity(){};
+		~BuiltInIdentity() { };
 	};
 
 	std::unordered_map<std::string, BuiltInIdentity> func_ids = {
-		{"while", BuiltInIdentity(builtin_func(lwc::while_loop))},
-		{"print", BuiltInIdentity(builtin_func(lwc::print))}
+		{"while", BuiltInIdentity(builtin_func(lwc::while_loop), new TypeImpl<NumVar>())},
+		{"print", BuiltInIdentity(builtin_func(lwc::print), new TypeImpl<NumVar>())}
 	};
 
 	bool is_num(const std::string& s)
@@ -76,17 +85,20 @@ namespace lwc {
 		builtin_func opfunc;
 		int argn = 0;
 		bool rval = false;
-		ParseToken(std::string _val, TokenType _tt, int _precedence = 0, bool _leftassoc = 0, bool _rval = false) : val(_val), tt(_tt), precedence(_precedence), leftassoc(_leftassoc), rval(_rval) {
+		RegisterType* rt = nullptr;
+
+		ParseToken(std::string _val, TokenType _tt, RegisterType* _rt, int _precedence = 0, bool _leftassoc = 0, bool _rval = false) : val(_val), tt(_tt), rt(_rt), precedence(_precedence), leftassoc(_leftassoc), rval(_rval) {
 			if (tt == TokenType::func && func_ids.count(val)) {
 				opfunc = func_ids[val].fnc;
 				argn = func_ids[val].arg_count;
 				rval = func_ids[val].rval;
 			}
 			else if (tt == TokenType::op) {
-				rval = op_ids[val].rval;
+				rval = op_ids.at(val).rval;
 			}
 		}
-		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc) {}; //No value is possible here because the string value is irrelevant to an op
+		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt)
+		{ }; //No value is possible here because the string value is irrelevant to an op
 		bool operator<(const ParseToken& pt) { return precedence < pt.precedence; }
 		bool operator>(const ParseToken& pt) { return precedence > pt.precedence; }
 		bool operator>=(const ParseToken& pt) { return precedence >= pt.precedence; }
@@ -112,9 +124,9 @@ namespace lwc {
 			//std::cout << "unk: " << unk << endl;
 			if (unk.length() > 0) {
 				if (qs == QState::num)
-					data.push_back(ParseToken(unk, TokenType::num));
+					data.push_back(ParseToken(unk, TokenType::num, nullptr));
 				else
-					data.push_back(ParseToken(unk, TokenType::name));
+					data.push_back(ParseToken(unk, TokenType::name, nullptr));
 				qs = QState::def;
 				unk.clear();
 			}
@@ -125,15 +137,15 @@ namespace lwc {
 			if (c == ')')
 			{
 				add_unknown(tmp, qs);
-				data.emplace_back(std::string(1, c), TokenType::rparen);
+				data.emplace_back(std::string(1, c), TokenType::rparen, nullptr);
 				ret = true;
 			}
 			else if (c == '(') {
 				if (!tmp.empty()) {
-					data.push_back(ParseToken(tmp, TokenType::func));
+					data.push_back(ParseToken(tmp, TokenType::func, func_ids[tmp].rt));
 					tmp.clear();
 				}
-				data.emplace_back(std::string(1, c), TokenType::lparen);
+				data.emplace_back(std::string(1, c), TokenType::lparen, nullptr);
 				ret = true;
 			}
 			if (ret) qs = QState::def;
@@ -148,7 +160,7 @@ namespace lwc {
 			for (char c : s) {
 				if (qs == QState::elastic) {
 					if (c == '`') {
-						data.push_back(ParseToken(temp, TokenType::elastic));
+						data.push_back(ParseToken(temp, TokenType::elastic, new TypeImpl<NumVar>));
 						qs = QState::def;
 						temp.clear();
 					}
@@ -185,9 +197,10 @@ namespace lwc {
 					temp = c;
 					qs = QState::op;
 				}
+				
 				else if (c == ',') {
 					add_unknown(temp, qs);
-					data.emplace_back(",", TokenType::comma);
+					data.emplace_back(",", TokenType::comma, nullptr);
 					qs = QState::def;
 				}
 				else if (c == '`') {
@@ -227,7 +240,7 @@ namespace lwc {
 		bool empty() { return data.empty(); }
 	};
 
-	std::queue<ParseToken> shunting_yard(TokenQueue tq) //Actual Shunting-Yard algorithm. output is the output queue
+	std::queue<ParseToken> shunting_yard(TokenQueue tq) //Adapted Shunting-Yard algorithm. output is the output queue
 	{
 		std::queue<ParseToken> out_q; //output queue
 		std::stack<ParseToken> op_stk; //operator stack
@@ -295,20 +308,6 @@ namespace lwc {
 		return out_q;
 	}
 
-	struct TokenNode { //Node for our ParseTree
-		ParseToken data;
-		std::vector<TokenNode*> branches;
-		TokenNode(ParseToken _data, std::vector<TokenNode*> _branches = {}) : data(_data), branches(_branches) {}
-		~TokenNode() { for (TokenNode* tn : branches) { delete tn; } }
-	};
-
-
-	struct STLine { // test for new version of line
-		lwc::builtin_func func;
-		std::vector<lwc::variable> varset;
-		lwc::variable leaf_var = nullptr;
-		STLine(lwc::varset sv, lwc::builtin_func _func): varset(sv), func(_func) {}
-	};
 
 	class LineNode {
 		std::vector<LineNode*> branches;
@@ -320,7 +319,8 @@ namespace lwc {
 		std::vector<LAST> output_block;
 		variable* arg_arr = nullptr;
 		int sz = 0;
-
+		RegisterType* rt;
+		variable rgstr;
 		void fit_args() {
 			delete[] arg_arr;
 			branches.shrink_to_fit();
@@ -328,20 +328,28 @@ namespace lwc {
 			arg_arr = new variable[sz];
 		}
 
-		LineNode(builtin_func _func, std::vector<LineNode*> _branches = {}, bool rval = false) : func(_func), branches(_branches) 
+		void fit_register() {
+			BaseVariable* tempbv = (BaseVariable*)rt->allocate();
+			rgstr = variable(tempbv);
+		}
+
+		LineNode(builtin_func _func, RegisterType* _rt, std::vector<LineNode*> _branches = {}, bool rval = false) : func(_func), rt(_rt), branches(_branches), rval(rval)
 		{ 
 			fit_args();
+			fit_register();
 		}
-		LineNode(variable _var) : var(_var) { is_leaf = true; }
+
+		LineNode(variable _var, RegisterType* _rt) : var(_var), rt(_rt) { is_leaf = true; }
 		LineNode() { is_leaf = true; }
 		~LineNode() { delete[] arg_arr; }
 
 		void add_branch(LineNode* ln) {
 			branches.push_back(ln);
 			fit_args();
+			fit_register();
 		}
 
-		LineNode* get_branch(int index) {
+		LineNode* get_branch(const int& index) {
 			return branches[index];
 		}
 	};
@@ -354,7 +362,9 @@ namespace lwc {
 		long get()
 		{
 			//std::cout << "CALLING IN" << a << std::endl;
-			return evaluate_line(linenode.get())->get();
+			variable v = evaluate_line(linenode.get());
+			variable v2 = std::static_pointer_cast<BaseVariable>(linenode->rgstr);
+			return v->get();
 		}
 	};
 
@@ -392,7 +402,7 @@ namespace lwc {
 						pds.pop();
 					}
 					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-					pds.push(new LineNode(pt.opfunc, temp, pt.rval)); //create and push operator node with operand children
+					pds.push(new LineNode(pt.opfunc, pt.rt, temp, pt.rval)); //create and push operator node with operand children
 				}
 				else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemented
 					std::vector<LineNode*> temp;
@@ -401,7 +411,7 @@ namespace lwc {
 						pds.pop();
 					}
 					std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-					LineNode* fln = new LineNode(pt.opfunc, temp, pt.rval);
+					LineNode* fln = new LineNode(pt.opfunc, pt.rt, temp, pt.rval);
 					if (pt.brace_start) {
 						block_node = fln;
 						block_starts += 1;
@@ -411,11 +421,11 @@ namespace lwc {
 				}
 				else if (pt.tt == TokenType::elastic) {
 					LAST l = LAST(shunting_yard(TokenQueue(pt.val)), global);
-					pds.push(new LineNode(std::make_shared<LASTVariable>(l.root)));
+					pds.push(new LineNode(std::make_shared<LASTVariable>(l.root), pt.rt));
 				}
 				else {
 					//std::cout << "whats up" << pt.val << " " <<convert_symbol(pt, global)->get() << " " << is_num(pt.val) << std::endl;
-					pds.push(new LineNode(convert_symbol(pt, global))); //if not an operator, push to pds				
+					pds.push(new LineNode(convert_symbol(pt, global), pt.rt)); //if not an operator, push to pds				
 				}
 			}
 			if (!pds.empty()) {
@@ -429,8 +439,6 @@ namespace lwc {
 	};
 
 
-
-
 	lwc::variable evaluate_line(lwc::LineNode * const node) {
 
 		for (int i = 0; i < node->sz ; ++i) {
@@ -441,18 +449,15 @@ namespace lwc {
 				node->arg_arr[i] = evaluate_line(node->get_branch(i));
 			}
 		}
-		return node->func(node->arg_arr, node->sz);
+		return node->func(node->arg_arr, node->rgstr, node->sz);
 	}
 
 	lwc::variable evaluate_lines(vector<lwc::LAST> &lines) {
 		lwc::variable var;
-		for (int i = 0; i < lines.size();++i) {
-			if(i<lines.size()-1)
-				evaluate_line(lines[i].root);
-			else
-				var = evaluate_line(lines[i].root);
+		for (int i = 0; i < lines.size()-1;++i) {
+			evaluate_line(lines[i].root);
 		}
-		return var;
+		return evaluate_line(lines[lines.size() - 1].root);;
 	}
 
 	typedef std::vector<LAST> block_func;
@@ -491,7 +496,7 @@ namespace lwc {
 			else if (tq.brace_end) {
 				std::shared_ptr<CodeBlockVariable> cbv = std::make_shared<CodeBlockVariable>(blockstack.top());
 				blockstack.pop();
-				LineNode *ln = new LineNode(cbv);
+				LineNode *ln = new LineNode(cbv, new TypeImpl<NumVar>);
 				bnodes.top()->add_branch(ln);
 				bnodes.pop();
 			}

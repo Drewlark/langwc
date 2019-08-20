@@ -120,6 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="lwc_builtins.h" />
+    <ClInclude Include="lwc_RegisterStore.h" />
     <ClInclude Include="lwc_typedefs.h" />
     <ClInclude Include="lwc_Parser.h" />
   </ItemGroup>

@@ -43,7 +43,29 @@ namespace lwc {
 	typedef std::shared_ptr<NumVar> n_variable;
 	typedef std::vector<variable> varset;
 
-	using builtin_func = variable(*)(variable*, const int& argc);
+	
+
+	class RegisterType
+	{
+	public:
+		virtual ~RegisterType() {}
+		virtual void* allocate()const = 0;
+		virtual void* cast(void* obj)const = 0;
+		virtual int size()const = 0;
+	};
+
+	template<typename T> class TypeImpl : public RegisterType
+	{
+	public:
+		virtual void* allocate()const { return new T; }
+		virtual void* cast(void* obj)const { return static_cast<T*>(obj); }
+		virtual int size()const { return sizeof(T); }
+	};
+
+	using builtin_func = variable  (*)(variable* vars, const variable &reg, const int& argc);
+
+	typedef std::shared_ptr<void> soft_typed;
+	//builtin_func definition moved to lwc_RegisterStore
 	
 }
 

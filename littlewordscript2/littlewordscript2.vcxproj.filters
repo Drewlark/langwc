@@ -24,6 +24,9 @@
     <ClInclude Include="lwc_Parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lwc_RegisterStore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
