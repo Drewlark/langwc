@@ -455,9 +455,9 @@ namespace lwc {
 	lwc::variable evaluate_lines(vector<lwc::LAST> &lines) {
 		lwc::variable var;
 		for (int i = 0; i < lines.size()-1;++i) {
-			evaluate_line(lines[i].root);
+			var = evaluate_line(lines[i].root);
 		}
-		return evaluate_line(lines[lines.size() - 1].root);;
+		return evaluate_line(lines[lines.size() - 1].root);
 	}
 
 	typedef std::vector<LAST> block_func;
