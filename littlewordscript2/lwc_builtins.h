@@ -53,8 +53,17 @@ namespace lwc {
 		return reg;
 	}
 
+	variable is_greaterthan(variable* vars, const variable& reg, const int& argc) {
+		NumVar nv(vars[0]->get() > vars[1]->get());
+		*reg = nv;
+		return reg;
+	}
+
 	variable print(variable* vars, const variable &reg, const int& argc) {
-		cout << vars[0]->get() << endl;
+		for (int i = 0; i < argc; i++) {
+			std::cout << vars[i]->get() << " ";
+		}
+		std::cout << std::endl;
 		return vars[0];
 	}
 

@@ -1,14 +1,15 @@
-a=0
-b=20000000
-
-while(`a<b`){
- a+=1
+bi = 0
+while(`bi<3`){
+ a=0
+ b=1
+ c=1
+ iter=0
+ while(`iter<10`){
+  a=c+b
+  print(iter, a, b, c)
+  c=b
+  b=a
+  iter+=1;
+ }
+ bi+=1;
 }
-print(a)
-
-
-#test 2
-#a=1
-#b=2
-#a=a+b
-#print(a)

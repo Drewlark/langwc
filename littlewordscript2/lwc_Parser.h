@@ -29,7 +29,7 @@ namespace lwc {
 		RegisterType* rt = nullptr;
 		OperatorIdentity(lwc::builtin_func _fnc, bool _leftassoc,
 			int8_t _precedence, bool _rval=false, RegisterType *_rt = nullptr) : fnc(_fnc), leftassoc(_leftassoc), precedence(_precedence), rval(_rval),rt(_rt) {};
-		OperatorIdentity() {};
+		OperatorIdentity() { delete rt; };
 		~OperatorIdentity() {};
 	};
 
@@ -40,6 +40,7 @@ namespace lwc {
 		{"/", OperatorIdentity(builtin_func(lwc::div), 1, 1, true, new TypeImpl<NumVar>())},
 		{"=", OperatorIdentity(builtin_func(lwc::assign), 0, -2, true, new TypeImpl<NumVar>())},
 		{"<", OperatorIdentity(builtin_func(lwc::is_lessthan), 0, -1, true, new TypeImpl<NumVar>())},
+		{">", OperatorIdentity(builtin_func(lwc::is_greaterthan), 0, -1, true, new TypeImpl<NumVar>())},
 		{"+=", OperatorIdentity(builtin_func(lwc::incrementby), 0, -2, true, new TypeImpl<NumVar>())}
 	};
 
@@ -49,11 +50,11 @@ namespace lwc {
 		bool rval = false;
 		RegisterType* rt;
 		BuiltInIdentity(lwc::builtin_func _fnc, RegisterType* _rt, int _arg_count = 1, bool _rval = false ) : fnc(_fnc), arg_count(_arg_count), rval(_rval), rt(_rt) {}
-		BuiltInIdentity(){};
+		BuiltInIdentity(){ delete rt; };
 		~BuiltInIdentity() { };
 	};
 
-	std::unordered_map<std::string, BuiltInIdentity> func_ids = {
+	static std::unordered_map<std::string, BuiltInIdentity> func_ids = {
 		{"while", BuiltInIdentity(builtin_func(lwc::while_loop), new TypeImpl<NumVar>())},
 		{"print", BuiltInIdentity(builtin_func(lwc::print), new TypeImpl<NumVar>())}
 	};
@@ -83,7 +84,7 @@ namespace lwc {
 		bool brace_start = false;
 		bool brace_end = false;
 		builtin_func opfunc;
-		int argn = 0;
+		int argn = 1;
 		bool rval = false;
 		RegisterType* rt = nullptr;
 
@@ -119,7 +120,8 @@ namespace lwc {
 	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
 		static enum class QState { def, op, num, elastic };
 		std::deque<lwc::ParseToken> data;
-		
+		std::stack<lwc::ParseToken*> func_stack;
+		int paren_depth = 0;
 		void add_unknown(std::string &unk, QState &qs) {
 			//std::cout << "unk: " << unk << endl;
 			if (unk.length() > 0) {
@@ -139,12 +141,18 @@ namespace lwc {
 				add_unknown(tmp, qs);
 				data.emplace_back(std::string(1, c), TokenType::rparen, nullptr);
 				ret = true;
+				--paren_depth;
+				if (paren_depth == 0 && !func_stack.empty()) {
+					func_stack.pop();
+				}
 			}
 			else if (c == '(') {
 				if (!tmp.empty()) {
 					data.push_back(ParseToken(tmp, TokenType::func, func_ids[tmp].rt));
+					func_stack.push(&data.back());
 					tmp.clear();
 				}
+				++paren_depth;
 				data.emplace_back(std::string(1, c), TokenType::lparen, nullptr);
 				ret = true;
 			}
@@ -201,6 +209,9 @@ namespace lwc {
 				else if (c == ',') {
 					add_unknown(temp, qs);
 					data.emplace_back(",", TokenType::comma, nullptr);
+					if (!func_stack.empty()) {
+						++func_stack.top()->argn;
+					}
 					qs = QState::def;
 				}
 				else if (c == '`') {
@@ -346,7 +357,6 @@ namespace lwc {
 		void add_branch(LineNode* ln) {
 			branches.push_back(ln);
 			fit_args();
-			fit_register();
 		}
 
 		LineNode* get_branch(const int& index) {
@@ -406,7 +416,7 @@ namespace lwc {
 				}
 				else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemented
 					std::vector<LineNode*> temp;
-					for (int i = 0; i < pt.argn; ++i) { //TODO: let functions work for proper number of parameters
+					for (int i = 0; i < pt.argn; ++i) {
 						temp.push_back(pds.top());
 						pds.pop();
 					}
@@ -451,6 +461,7 @@ namespace lwc {
 		}
 		return node->func(node->arg_arr, node->rgstr, node->sz);
 	}
+
 
 	lwc::variable evaluate_lines(vector<lwc::LAST> &lines) {
 		lwc::variable var;

@@ -49,15 +49,14 @@ int main()
 	std::clock_t start_eval = clock();
 	lwc::evaluate_lines(root_scope);
 	clock_t end = clock();
-
-	double fulltime = (double)(end - start);
 	double evaltime = (double)(end - start_eval);
+	double fulltime = (double)(end - start);
 	std::cout << "Done Evaluating" << std::endl << std::endl;
 	std::cout << "FULL RUNNING TIME: " << fulltime << std::endl;
 	std::cout << "BUILDING TIME: " << fulltime - evaltime << std::endl;
 	std::cout << "BUILT EVALUATION TIME: " << evaltime << std::endl;
 	
 	std::cout << std::endl;
-	//getchar();
+	//getchar(); //pause execution so breakpoint is unneeded. Should be disabled in performance checks of course.
 	return 0;
 }
