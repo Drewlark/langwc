@@ -7,6 +7,6 @@ At the time of writing the language currently has only assignment, arithmetic, l
 
 I've been using VS2019 to write this, but there is no reason it can't be compiled with basically any other compiler on any OS, though I haven't bothered to try g++ or anything yet. Regardless, the code base is pretty simple, and requires no external dependencies.
 
-My speed goal is somewhere faster than python. I'd like to be quite a bit faster, but at the moment my malloc calls are pretty ridiculous so it runs very roughly around 0-20% slower than python 3.7.
+My speed goal is somewhere faster than python. Right now in a very basic speed test (thousands of small assignments and arithmetic) the language is marginally faster (10-20%). I'll try to keep it here, even as more features are added.
 
 I don't have an exact use case in mind, it really is more of a challenge for myself. It has maybe one cool feature so far, and that really is kind of a weird intregated macro system I guess.
