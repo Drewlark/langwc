@@ -53,3 +53,7 @@ might be time to switch to static_varset again
 ----------------Optimization complete! mostly--------------------
 	for operations like add, mult, etc. some sort of heap allocated (@build-time) register set should be used to store their rvalues
 	okay, issue for this is that memory has to be allocated with type known. hmm
+
+---------------Typing-------------------------------------
+cannot go with runtime "function" typing, as all the references to that value of course do not change when you change one reference
+Memory: must switch to many weak pointers

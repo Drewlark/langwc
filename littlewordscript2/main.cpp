@@ -1,13 +1,7 @@
 #include "lwc_builtins.h"
 #include <fstream>
 #include <iostream>
-#include <algorithm>
-#include <unordered_map>
 #include <ctime>
-#include <unordered_map>
-#include <unordered_set>
-#include <list>
-#include <map>
 #include <string>
 #include "lwc_Parser.h"
 //Testing git push from different machine
@@ -43,8 +37,8 @@ int main()
 	}
 	fs.flush();
 	std::unordered_map<std::string, lwc::variable> my_varmap;
-	std::vector<lwc::LAST> root_scope(lwc::parse_from_slines(words));
-	std::cout << "compilation complete" << std::endl;
+	lwc::block_func root_scope(lwc::parse_from_slines(words));
+	std::cout << "build complete" << std::endl;
 
 	std::clock_t start_eval = clock();
 	lwc::evaluate_lines(root_scope);

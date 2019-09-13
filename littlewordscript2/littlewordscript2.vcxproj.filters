@@ -27,9 +27,24 @@
     <ClInclude Include="lwc_RegisterStore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lwc_prims.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="typedefs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lwc_Parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="builtins.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lwc_Lexing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
