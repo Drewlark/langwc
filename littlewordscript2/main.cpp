@@ -6,14 +6,6 @@
 #include "lwc_Parser.h"
 //Testing git push from different machine
 
-bool is_num(const string& s)
-{
-	std::string::const_iterator it = s.begin();
-	while (it != s.end() && isdigit(*it)) ++it;
-	return !s.empty() && it == s.end();
-}
-
-
 void remove_whitespace(std::string &str) {
 	str.erase(remove_if(str.begin(), str.end(), isspace), str.end());
 }
@@ -31,7 +23,7 @@ int main()
 	fs.open(file_name.c_str());
 	std::string line;
 	while (std::getline(fs, line)) {
-		remove_whitespace(line);
+		remove_whitespace(line); //temporary solution. Lexer will have to handle this in future.
 		if(line.size() > 0 && line[0] != '#')
 			words.push_back(line);
 	}
