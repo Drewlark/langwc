@@ -10,3 +10,5 @@ I've been using VS2019 to write this, but there is no reason it can't be compile
 My speed goal is somewhere faster than python. Right now in a very basic speed test (thousands of small assignments and arithmetic) the language is marginally faster (10-20%). I'll try to keep it here, even as more features are added.
 
 I don't have an exact use case in mind, it really is more of a challenge for myself. It has maybe one cool feature so far, and that really is kind of a weird intregated macro system I guess.
+
+Oh, and currently there is **no garbage collection**, that is next on my agenda however.
