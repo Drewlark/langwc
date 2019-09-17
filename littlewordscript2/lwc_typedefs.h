@@ -51,8 +51,6 @@ namespace lwc {
 		virtual int size()const { return sizeof(T); }
 	};
 
-	typedef std::shared_ptr<void> soft_typed;
-
 
 	//builtin_func definition moved to lwc_RegisterStore
 	const static TypeImpl<BaseVariable> BASE_TYPEI;
@@ -70,7 +68,7 @@ namespace lwc {
 		bool brace_start = false;
 		bool brace_end = false;
 		builtin_func opfunc;
-		int argn = 1;
+		int argn = 0;
 		bool rval = false;
 		RegisterType* rt = nullptr;
 
@@ -112,26 +110,33 @@ namespace lwc {
 	class LineNode {
 		std::vector<LineNode*> branches;
 	public:
-		builtin_func func;
-		bool rval = false;
-		variable var = variable();
-		bool is_leaf = false;
+		builtin_func func = nullptr;
 		std::vector<LAST> output_block;
+
+		bool is_rval = true;
+		variable var;
+		variable* lvar = nullptr;
+		bool is_leaf = false;
+
 		variable* arg_arr = nullptr;
 		int sz = 0;
-		RegisterType* rt;
+		RegisterType* rt = nullptr;
 		variable rgstr;
-		void fit_args();
 
+
+		void fit_args();
 		void fit_register();
 
 		LineNode(builtin_func _func, RegisterType* _rt, std::vector<LineNode*> _branches = {}, bool rval = false);
 
 		LineNode(variable _var, RegisterType* _rt) : var(_var), rt(_rt) { is_leaf = true; }
+		LineNode(variable* _lvar, RegisterType* _rt) : lvar(_lvar), rt(_rt) { is_leaf = true; is_rval = false; }
 		LineNode() { is_leaf = true; }
 		~LineNode() { delete[] arg_arr; }
 
 		void add_branch(LineNode* ln);
+
+		variable& get_leaf() {return is_rval ? var : *lvar;}
 
 		LineNode* get_branch(const int& index);
 	};
@@ -142,9 +147,7 @@ namespace lwc {
 		uint8_t block_starts = 0;
 		LineNode* block_node = nullptr;
 		LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& global);
-		~LAST() {
-			//delete root;
-		}
+		~LAST() {}
 	};
 	typedef std::vector<LAST> block_func;
 
@@ -170,6 +173,10 @@ namespace lwc {
 		CodeBlockVariable() {}
 		long get();
 		RegisterType const* const get_typei();
+	};
+
+	struct Scope {
+		//vector<
 	};
 }
 

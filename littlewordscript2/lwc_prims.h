@@ -45,10 +45,10 @@ namespace lwc {
 
 	struct BuiltInIdentity {
 		lwc::builtin_func fnc;
-		int arg_count = 1;
+		int arg_count = 0;
 		bool rval = false;
 		RegisterType* rt;
-		BuiltInIdentity(lwc::builtin_func _fnc, RegisterType* _rt, int _arg_count = 1, bool _rval = false) : fnc(_fnc), arg_count(_arg_count), rval(_rval), rt(_rt) {}
+		BuiltInIdentity(lwc::builtin_func _fnc, RegisterType* _rt, int _arg_count = 0, bool _rval = false) : fnc(_fnc), arg_count(_arg_count), rval(_rval), rt(_rt) {}
 		BuiltInIdentity() {};
 		~BuiltInIdentity() { };
 	};

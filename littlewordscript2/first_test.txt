@@ -12,5 +12,6 @@ while(`bi<3`){
   b=a
   iter+=1;
  }
+ print()
  bi+=1;
 }

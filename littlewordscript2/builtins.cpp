@@ -57,7 +57,7 @@ namespace lwc {
 			std::cout << vars[i]->get() << " ";
 		}
 		std::cout << std::endl;
-		return vars[0];
+		return nullptr;
 	}
 
 	variable incrementby(lwc::variable* vars, const variable& reg, const int& argc) {

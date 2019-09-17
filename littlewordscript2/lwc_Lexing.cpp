@@ -22,6 +22,9 @@ namespace lwc {
 				data.push_back(ParseToken(unk, TokenType::name, nullptr));
 			qs = QState::def;
 			unk.clear();
+			if (!func_stack.empty()) {
+				++func_stack.top()->argn;
+			}
 		}
 	}
 
@@ -76,6 +79,9 @@ namespace lwc {
 					data.push_back(ParseToken(temp, TokenType::elastic, new TypeImpl<NumVar>));
 					qs = QState::def;
 					temp.clear();
+					if (!func_stack.empty()) {
+						++func_stack.top()->argn;
+					}
 				}
 				else {
 					temp += c;
@@ -110,9 +116,9 @@ namespace lwc {
 			else if (c == ',') {
 				add_unknown(temp, qs);
 				data.emplace_back(",", TokenType::comma, nullptr);
-				if (!func_stack.empty()) {
+				/*if (!func_stack.empty()) {
 					++func_stack.top()->argn;
-				}
+				}*/
 				qs = QState::def;
 			}
 			else if (c == ' ') {

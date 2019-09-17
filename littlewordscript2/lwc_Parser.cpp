@@ -7,7 +7,7 @@ namespace lwc {
 		for (char c : s) { if (!isdigit(c)) return false; }
 	}
 
-	LAST::LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& global) { //Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
+	LAST::LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& scope) { //Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
 		std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
 		while (!tq.empty()) {
 			ParseToken pt = ParseToken(tq.front());
@@ -37,12 +37,14 @@ namespace lwc {
 				pds.push(fln); //create and push operator node with operand children
 			}
 			else if (pt.tt == TokenType::elastic) {
-				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), global);
+				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), scope);
 				pds.push(new LineNode(std::make_shared<LASTVariable>(l.root), pt.rt));
 			}
 			else {
-				//std::cout << "whats up" << pt.val << " " <<convert_symbol(pt, global)->get() << " " << is_num(pt.val) << std::endl;
-				pds.push(new LineNode(convert_symbol(pt, global), pt.rt)); //if not an operator, push to pds				
+				//std::cout << "whats up" << pt.val << " " <<convert_symbol(pt, scope)->get() << " " << is_num(pt.val) << std::endl;
+				variable v = convert_symbol(pt, scope);
+				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(&scope[pt.val], pt.rt));
+				//if not an operator, push to pds				
 			}
 		}
 		if (!pds.empty()) {
@@ -62,7 +64,7 @@ namespace lwc {
 		rgstr = variable(tempbv);
 	}
 
-	LineNode::LineNode(builtin_func _func, RegisterType* _rt, std::vector<LineNode*> _branches, bool rval) : func(_func), rt(_rt), branches(_branches), rval(rval)
+	LineNode::LineNode(builtin_func _func, RegisterType* _rt, std::vector<LineNode*> _branches, bool rval) : func(_func), rt(_rt), branches(_branches), is_rval(rval)
 	{
 		fit_args();
 		fit_register();
@@ -174,12 +176,11 @@ namespace lwc {
 		}
 		else {
 			if (varmap.count(pt.val) == 0) {
-				lwc::variable temp = std::make_shared<NumVar>(long(0));
-				varmap[pt.val] = temp;
-				return temp;
+				varmap[pt.val] = std::make_shared<NumVar>(long(0));
+				return false;
 			}
 			else {
-				return varmap[pt.val];
+				return false;
 			}
 		}
 	}
@@ -188,7 +189,7 @@ namespace lwc {
 
 		for (int i = 0; i < node->sz; ++i) {
 			if (node->get_branch(i)->is_leaf) {
-				node->arg_arr[i] = node->get_branch(i)->var;
+				node->arg_arr[i] = node->get_branch(i)->get_leaf();
 			}
 			else {
 				node->arg_arr[i] = evaluate_line(node->get_branch(i));
@@ -201,7 +202,6 @@ namespace lwc {
 		lwc::variable var;
 		for (LAST line : lines) {
 			var = evaluate_line(line.root);
-			std::cout << var->get() << std::endl;
 		}
 		return var;
 	}
