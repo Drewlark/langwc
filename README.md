@@ -5,7 +5,7 @@ It is my second attempt at designing a scripting language. The first language wo
 
 At the time of writing the language currently has only assignment, arithmetic, loops, and conditional statements. Some features may need manual activation (check lwc_builtins.h and lwc_Parser.h) for the time being.
 
-I've been using VS2019 to write this, but there is no reason it can't be compiled with basically any other compiler on any OS, though I haven't bothered to try g++ or anything yet. Regardless, the code base is pretty simple, and requires no external dependencies.
+I've been using VS2019 to write this, but there is no reason it can't be compiled with basically any other compiler on any OS, though I haven't bothered to try gcc or anything yet. Regardless, the code base is pretty simple, and requires no external dependencies, just the STL.
 
 My speed goal is somewhere faster than python. Right now in a very basic speed test (thousands of small assignments and arithmetic) the language is marginally faster (10-20%). I'll try to keep it here, even as more features are added.
 
