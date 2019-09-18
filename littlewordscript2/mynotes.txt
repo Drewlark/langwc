@@ -57,3 +57,5 @@ might be time to switch to static_varset again
 ---------------Typing-------------------------------------
 cannot go with runtime "function" typing, as all the references to that value of course do not change when you change one reference
 Memory: must switch to many weak pointers
+
+For dynamic typing: LAST lvar leaves could reach into vector space (using number) and would manipulate variables that way.

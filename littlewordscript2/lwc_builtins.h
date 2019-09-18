@@ -13,29 +13,29 @@ namespace lwc {
 
 	//variable mk_num_var() {};
 
-	variable add(variable* vars, const variable& reg, const int& argc);
+	variable& add(variable* vars, variable& reg, const int& argc);
 
-	variable sub(variable* vars, const variable& reg, const int& argc);
+	variable& sub(variable* vars, variable& reg, const int& argc);
 
-	variable mult(variable* vars, const variable& reg, const int& argc);
+	variable& mult(variable* vars, variable& reg, const int& argc);
 
-	variable div(variable* vars, const variable& reg, const int& argc);
+	variable& div(variable* vars, variable& reg, const int& argc);
 
-	variable while_loop(variable* vars, const variable& reg, const int& argc);
+	variable& while_loop(variable* vars, variable& reg, const int& argc);
 
-	variable assign(variable* vars, const variable& reg, const int& argc);
+	variable& assign(variable* vars, variable& reg, const int& argc);
 
-	variable refassign(variable* vars, const variable& reg, const int& argc);
+	variable& refassign(variable* vars, variable& reg, const int& argc);
 
-	variable is_lessthan(variable* vars, const variable& reg, const int& argc);
+	variable& is_lessthan(variable* vars, variable& reg, const int& argc);
 
-	variable is_greaterthan(variable* vars, const variable& reg, const int& argc);
+	variable& is_greaterthan(variable* vars, variable& reg, const int& argc);
 
-	variable print(variable* vars, const variable& reg, const int& argc);
+	variable& print(variable* vars, variable& reg, const int& argc);
 
-	variable incrementby(lwc::variable* vars, const variable& reg, const int& argc);
+	variable& incrementby(lwc::variable* vars, variable& reg, const int& argc);
 
-	variable scast(lwc::variable* vars, const variable& reg, const int& argc);
+	variable& scast(lwc::variable* vars, variable& reg, const int& argc);
 
 	
 }

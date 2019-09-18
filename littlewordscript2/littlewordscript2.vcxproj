@@ -133,7 +133,7 @@
     <ClCompile Include="typedefs.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="first_test.txt" />
+    <Text Include="first_test.lwc" />
     <Text Include="mynotes.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

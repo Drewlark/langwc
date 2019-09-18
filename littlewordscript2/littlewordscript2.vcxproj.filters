@@ -49,10 +49,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="first_test.txt">
+    <Text Include="mynotes.txt">
       <Filter>Source Files</Filter>
     </Text>
-    <Text Include="mynotes.txt">
+    <Text Include="first_test.lwc">
       <Filter>Source Files</Filter>
     </Text>
   </ItemGroup>

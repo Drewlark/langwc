@@ -7,7 +7,8 @@ namespace lwc {
 		for (char c : s) { if (!isdigit(c)) return false; }
 	}
 
-	LAST::LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& scope) { //Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
+	LAST::LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& scope) { 
+		//Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
 		std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
 		while (!tq.empty()) {
 			ParseToken pt = ParseToken(tq.front());
@@ -41,10 +42,8 @@ namespace lwc {
 				pds.push(new LineNode(std::make_shared<LASTVariable>(l.root), pt.rt));
 			}
 			else {
-				//std::cout << "whats up" << pt.val << " " <<convert_symbol(pt, scope)->get() << " " << is_num(pt.val) << std::endl;
 				variable v = convert_symbol(pt, scope);
-				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(&scope[pt.val], pt.rt));
-				//if not an operator, push to pds				
+				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(&scope[pt.val], pt.rt)); //use mapped value for lvals (will be useful for garbage collection)
 			}
 		}
 		if (!pds.empty()) {
@@ -185,7 +184,7 @@ namespace lwc {
 		}
 	}
 
-	lwc::variable evaluate_line(lwc::LineNode* const node) {
+	lwc::variable &evaluate_line(lwc::LineNode* const node) {
 
 		for (int i = 0; i < node->sz; ++i) {
 			if (node->get_branch(i)->is_leaf) {
@@ -198,12 +197,12 @@ namespace lwc {
 		return node->func(node->arg_arr, node->rgstr, node->sz);
 	}
 
-	lwc::variable evaluate_lines(block_func lines) {
-		lwc::variable var;
+	lwc::variable& evaluate_lines(block_func lines) {
+		lwc::variable* var = nullptr;
 		for (LAST line : lines) {
-			var = evaluate_line(line.root);
+			var = &evaluate_line(line.root);
 		}
-		return var;
+		return *var;
 	}
 
 	block_func parse_from_slines(std::vector<std::string> slines) {

@@ -52,7 +52,6 @@ namespace lwc {
 	};
 
 
-	//builtin_func definition moved to lwc_RegisterStore
 	const static TypeImpl<BaseVariable> BASE_TYPEI;
 	const static TypeImpl<NumVar> NUM_TYPEI;
 
@@ -67,7 +66,7 @@ namespace lwc {
 		bool leftassoc = false;
 		bool brace_start = false;
 		bool brace_end = false;
-		builtin_func opfunc;
+		builtin_func opfunc = nullptr;
 		int argn = 0;
 		bool rval = false;
 		RegisterType* rt = nullptr;
@@ -142,7 +141,7 @@ namespace lwc {
 	};
 
 	struct LAST { //"Line" abstract syntax tree
-		LineNode* root;
+		LineNode* root = nullptr;
 		uint8_t block_ends = 0;
 		uint8_t block_starts = 0;
 		LineNode* block_node = nullptr;
@@ -176,7 +175,20 @@ namespace lwc {
 	};
 
 	struct Scope {
-		//vector<
+		//Currently unused
+		std::vector<variable> values;
+		std::unordered_map<std::string, int> names;
+
+		template <class T = NumVar>
+		int handle_name(std::string name) {
+			if (names.count(name)) {
+				return names[name];
+			}
+			else {
+				names[name] = values.size();
+				values.push_back(std::make_shared<T>());
+			}
+		}
 	};
 }
 

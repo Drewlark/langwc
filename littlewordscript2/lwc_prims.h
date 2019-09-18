@@ -28,11 +28,11 @@ namespace lwc {
 	};
 
 	typedef std::shared_ptr<BaseVariable> variable;
-	using builtin_func = variable(*)(variable* vars, const variable& reg, const int& argc);
+	using builtin_func = variable&(*)(variable* vars, variable& reg, const int& argc);
 
 	struct OperatorIdentity
 	{
-		lwc::builtin_func fnc;
+		lwc::builtin_func fnc = nullptr;
 		bool leftassoc = false;
 		int8_t precedence = 0;
 		bool rval = false;
@@ -44,10 +44,10 @@ namespace lwc {
 	};
 
 	struct BuiltInIdentity {
-		lwc::builtin_func fnc;
+		lwc::builtin_func fnc = nullptr;
 		int arg_count = 0;
 		bool rval = false;
-		RegisterType* rt;
+		RegisterType* rt = nullptr;
 		BuiltInIdentity(lwc::builtin_func _fnc, RegisterType* _rt, int _arg_count = 0, bool _rval = false) : fnc(_fnc), arg_count(_arg_count), rval(_rval), rt(_rt) {}
 		BuiltInIdentity() {};
 		~BuiltInIdentity() { };
