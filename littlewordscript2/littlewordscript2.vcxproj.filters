@@ -24,10 +24,10 @@
     <ClInclude Include="lwc_Parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lwc_RegisterStore.h">
+    <ClInclude Include="lwc_prims.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lwc_prims.h">
+    <ClInclude Include="lwc_err_codes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

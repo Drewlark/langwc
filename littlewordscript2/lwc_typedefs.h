@@ -6,16 +6,14 @@
 #include <stack>
 #include <queue>
 #include <unordered_map>
+#include <type_traits> // For ensuring certain templated functions only use template classes deriving from BaseVariable (defined in lwc_prims.h)
 #include "lwc_prims.h"
 #ifndef LWC_TYPEDEF
 #define LWC_TYPEDEF
 
 namespace lwc {
 	class Line;
-	class Evaluator;
 	template<typename T> class TypeImpl;
-	struct NumVar;
-	struct BaseVariable;
 
 	struct NumVar : BaseVariable {
 	private:
@@ -39,7 +37,6 @@ namespace lwc {
 		std::stringstream repr() { std::stringstream ss; ss << n; return ss;}
 	};
 
-	typedef std::shared_ptr<NumVar> n_variable;
 	typedef std::vector<variable> varset;
 
 	
@@ -104,7 +101,7 @@ namespace lwc {
 		bool empty();
 	};
 
-	class LAST;
+	struct LAST;
 
 	class LineNode {
 		std::vector<LineNode*> branches;
@@ -113,14 +110,14 @@ namespace lwc {
 		std::vector<LAST> output_block;
 
 		bool is_rval = true;
-		variable var;
+		variable var = nullptr;
 		variable* lvar = nullptr;
 		bool is_leaf = false;
 
-		variable* arg_arr = nullptr;
+		variable** arg_arr = nullptr;
 		int sz = 0;
 		RegisterType* rt = nullptr;
-		variable rgstr;
+		variable rgstr = nullptr;
 
 
 		void fit_args();
@@ -135,9 +132,46 @@ namespace lwc {
 
 		void add_branch(LineNode* ln);
 
-		variable& get_leaf() {return is_rval ? var : *lvar;}
+		variable* get_leaf() {return is_rval ? &var : lvar;}
 
 		LineNode* get_branch(const int& index);
+	};
+
+	class Scope {
+		//Currently unused
+		std::unordered_map<std::string, variable> names;
+	public:
+		Scope* parent = nullptr;
+		Scope(Scope* _parent = nullptr) : parent(_parent) {};
+		
+		variable* find_name_upward(const std::string& const name)
+		{
+			if (names.count(name)) {
+				return &names[name];
+			}
+			else if (parent) {
+				return parent->find_name_upward(name);
+			}
+			else {
+				return nullptr;
+			}
+		}
+		
+		template <class T = NumVar> // T represents type to initialize to, should always be derivative of BaseVariable
+		variable* handle_name(const std::string& const name) {
+			static_assert(std::is_base_of<BaseVariable, T>::value, "T must derive from lwc::BaseVariable");
+			if (names.count(name)) {
+				return &names[name];
+			}
+			else {
+				names[name] = new T();
+				return &names[name];
+			}
+		}
+
+		int count(const std::string& const name) { return names.count(name); }
+		variable* operator[](const std::string& const key) { return find_name_upward(key); }
+
 	};
 
 	struct LAST { //"Line" abstract syntax tree
@@ -145,14 +179,14 @@ namespace lwc {
 		uint8_t block_ends = 0;
 		uint8_t block_starts = 0;
 		LineNode* block_node = nullptr;
-		LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& global);
+		LAST(std::queue<ParseToken> tq, Scope& scope);
 		~LAST() {}
 	};
 	typedef std::vector<LAST> block_func;
 
 
 
-	class LASTVariable : public BaseVariable //variable wrapping a vector of type LAST
+	class LASTVariable : public BaseVariable // `` backtick expression variable (single LAST/Line)
 	{
 		std::shared_ptr<LineNode> linenode;
 		static const RegisterType const* typei;
@@ -174,22 +208,7 @@ namespace lwc {
 		RegisterType const* const get_typei();
 	};
 
-	struct Scope {
-		//Currently unused
-		std::vector<variable> values;
-		std::unordered_map<std::string, int> names;
 
-		template <class T = NumVar>
-		int handle_name(std::string name) {
-			if (names.count(name)) {
-				return names[name];
-			}
-			else {
-				names[name] = values.size();
-				values.push_back(std::make_shared<T>());
-			}
-		}
-	};
 }
 
 

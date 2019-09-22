@@ -59,3 +59,8 @@ cannot go with runtime "function" typing, as all the references to that value of
 Memory: must switch to many weak pointers
 
 For dynamic typing: LAST lvar leaves could reach into vector space (using number) and would manipulate variables that way.
+
+
+Typing done!
+
+It appears that there is some bug-related limit whereby operator lengths greater than 2 will break. Must fix lexer.

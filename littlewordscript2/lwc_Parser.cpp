@@ -7,55 +7,11 @@ namespace lwc {
 		for (char c : s) { if (!isdigit(c)) return false; }
 	}
 
-	LAST::LAST(std::queue<ParseToken> tq, std::unordered_map<std::string, lwc::variable>& scope) { 
-		//Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
-		std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
-		while (!tq.empty()) {
-			ParseToken pt = ParseToken(tq.front());
-			tq.pop();
-			if (pt.tt == TokenType::op) { //When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
-				std::vector<LineNode*> temp;
-				for (int i = 0; i < 2; ++i) { //Operators always consume two tokens
-					temp.push_back(pds.top());
-					pds.pop();
-				}
-				std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-				pds.push(new LineNode(pt.opfunc, pt.rt, temp, pt.rval)); //create and push operator node with operand children
-			}
-			else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemented
-				std::vector<LineNode*> temp;
-				for (int i = 0; i < pt.argn; ++i) {
-					temp.push_back(pds.top());
-					pds.pop();
-				}
-				std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-				LineNode* fln = new LineNode(pt.opfunc, pt.rt, temp, pt.rval);
-				if (pt.brace_start) {
-					block_node = fln;
-					block_starts += 1;
-				}
-
-				pds.push(fln); //create and push operator node with operand children
-			}
-			else if (pt.tt == TokenType::elastic) {
-				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), scope);
-				pds.push(new LineNode(std::make_shared<LASTVariable>(l.root), pt.rt));
-			}
-			else {
-				variable v = convert_symbol(pt, scope);
-				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(&scope[pt.val], pt.rt)); //use mapped value for lvals (will be useful for garbage collection)
-			}
-		}
-		if (!pds.empty()) {
-			root = pds.top(); //remaining node is the root
-		}
-	}
-
 	void LineNode::fit_args() {
 		delete[] arg_arr;
 		branches.shrink_to_fit();
 		sz = branches.size();
-		arg_arr = new variable[sz];
+		arg_arr = new variable*[sz];
 	}
 
 	void LineNode::fit_register() {
@@ -79,7 +35,7 @@ namespace lwc {
 	}
 
 
-	std::unordered_map<std::string, lwc::variable> global; //HACK: eventually pass through global scope
+	Scope global; //HACK: eventually pass through global scope
 
 	const static TypeImpl<LASTVariable> LAST_TYPEI;
 	const static TypeImpl<CodeBlockVariable> CB_TYPEI;
@@ -169,18 +125,60 @@ namespace lwc {
 		return out_q;
 	}
 
-	lwc::variable convert_symbol(const ParseToken& pt, std::unordered_map<std::string, lwc::variable>& varmap) {
+	lwc::variable convert_symbol(const ParseToken& pt, Scope& scope) {
 		if (pt.tt == TokenType::num) {
-			return std::make_shared<NumVar>(long(stol(pt.val)));
+			return new NumVar(long(stol(pt.val)));
 		}
 		else {
-			if (varmap.count(pt.val) == 0) {
-				varmap[pt.val] = std::make_shared<NumVar>(long(0));
-				return false;
+			scope.handle_name(pt.val);
+			return nullptr;
+		}
+	}
+
+	LAST::LAST(std::queue<ParseToken> tq, Scope& scope) {
+		//Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
+		std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
+		while (!tq.empty()) {
+			ParseToken pt = ParseToken(tq.front());
+			tq.pop();
+			if (pt.tt == TokenType::op) { //When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
+				std::vector<LineNode*> temp;
+				for (int i = 0; i < 2; ++i) { //Operators always consume two tokens
+					temp.push_back(pds.top());
+					pds.pop();
+				}
+				std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
+				pds.push(new LineNode(pt.opfunc, pt.rt, temp, pt.rval)); //create and push operator node with operand children
+			}
+			else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemented
+				std::vector<LineNode*> temp;
+				for (int i = 0; i < pt.argn; ++i) {
+					temp.push_back(pds.top());
+					pds.pop();
+				}
+				std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
+				LineNode* fln = new LineNode(pt.opfunc, pt.rt, temp, pt.rval);
+				if (pt.brace_start) {
+					block_node = fln;
+					block_starts += 1;	
+				}
+
+				pds.push(fln); //create and push operator node with operand children
+			}
+			else if (pt.tt == TokenType::elastic) {
+				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), scope);
+				LASTVariable* lvp = new LASTVariable(l.root);
+				// LASTVariable lv = *lvp; weirdly simply adding this line fixed a very bizarre implicit casting behavior. After I commented it out again, it was still fixed. Nothing else was changed before or after
+				pds.push(new LineNode(lvp, pt.rt));
+				LineNode* lnpp = pds.top();
 			}
 			else {
-				return false;
+				variable v = convert_symbol(pt, scope);
+				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(scope[pt.val], pt.rt)); //use mapped value for lvals (will be useful for garbage collection)
 			}
+		}
+		if (!pds.empty()) {
+			root = pds.top(); //remaining node is the root
 		}
 	}
 
@@ -191,7 +189,7 @@ namespace lwc {
 				node->arg_arr[i] = node->get_branch(i)->get_leaf();
 			}
 			else {
-				node->arg_arr[i] = evaluate_line(node->get_branch(i));
+				node->arg_arr[i] = &evaluate_line(node->get_branch(i));
 			}
 		}
 		return node->func(node->arg_arr, node->rgstr, node->sz);
@@ -224,7 +222,7 @@ namespace lwc {
 				bnodes.push(bnode);
 			}
 			else if (tq.brace_end) {
-				std::shared_ptr<CodeBlockVariable> cbv = std::make_shared<CodeBlockVariable>(blockstack.top());
+				CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
 				blockstack.pop();
 				LineNode* ln = new LineNode(cbv, new TypeImpl<NumVar>);
 				bnodes.top()->add_branch(ln);

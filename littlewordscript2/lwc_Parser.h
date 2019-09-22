@@ -15,13 +15,15 @@ namespace lwc {
 		{"<", OperatorIdentity(builtin_func(lwc::is_lessthan), 0, -1, true, new TypeImpl<NumVar>())},
 		{">", OperatorIdentity(builtin_func(lwc::is_greaterthan), 0, -1, true, new TypeImpl<NumVar>())},
 		{"+=", OperatorIdentity(builtin_func(lwc::incrementby), 0, -2, true, new TypeImpl<NumVar>())},
-		{"=>", OperatorIdentity(builtin_func(lwc::refassign), 0, -2, true, new TypeImpl<NumVar>())}
+		{"=>", OperatorIdentity(builtin_func(lwc::refassign), 0, -2, true, new TypeImpl<NumVar>())},
+		{"$", OperatorIdentity(builtin_func(lwc::bad_name), 0, -2, true, new TypeImpl<NumVar>())},
+		{"=$", OperatorIdentity(builtin_func(lwc::it_elast), 0, -2, true, new TypeImpl<LASTVariable>)}
 	};
 
 	static std::unordered_map<std::string, BuiltInIdentity> func_ids = {
 		{"while", BuiltInIdentity(builtin_func(lwc::while_loop), new TypeImpl<NumVar>())},
 		{"print", BuiltInIdentity(builtin_func(lwc::print), new TypeImpl<NumVar>())},
-		{"ncast", BuiltInIdentity(builtin_func(lwc::scast), new TypeImpl<NumVar>())}
+		{"scast", BuiltInIdentity(builtin_func(lwc::scast), new TypeImpl<NumVar>())}
 	};
 
 	bool is_num(const std::string& s);
@@ -30,7 +32,7 @@ namespace lwc {
 
 	std::queue<ParseToken> shunting_yard(TokenQueue tq); //Adapted Shunting-Yard algorithm. returns the output queue
 
-	lwc::variable convert_symbol(const ParseToken& pt, std::unordered_map<std::string, lwc::variable>& varmap);
+	lwc::variable convert_symbol(const ParseToken& pt, Scope& scope);
 
 	lwc::variable &evaluate_line(lwc::LineNode* const node);
 

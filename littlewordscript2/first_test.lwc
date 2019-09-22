@@ -1,6 +1,6 @@
 bi = 0
-x = 0
-while(`bi<3`){
+x =$ `bi<3`
+while(x){
  a=0
  b=1
  c=1

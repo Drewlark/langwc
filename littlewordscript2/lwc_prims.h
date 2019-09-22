@@ -27,8 +27,8 @@ namespace lwc {
 		virtual ~BaseVariable() {}
 	};
 
-	typedef std::shared_ptr<BaseVariable> variable;
-	using builtin_func = variable&(*)(variable* vars, variable& reg, const int& argc);
+	typedef BaseVariable* variable;
+	using builtin_func = variable&(*)(variable** vars, variable& reg, const int& argc);
 
 	struct OperatorIdentity
 	{
