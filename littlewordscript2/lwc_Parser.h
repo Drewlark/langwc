@@ -17,13 +17,15 @@ namespace lwc {
 		{"+=", OperatorIdentity(builtin_func(lwc::incrementby), 0, -2, true, new TypeImpl<NumVar>())},
 		{"=>", OperatorIdentity(builtin_func(lwc::refassign), 0, -2, true, new TypeImpl<NumVar>())},
 		{"$", OperatorIdentity(builtin_func(lwc::bad_name), 0, -2, true, new TypeImpl<NumVar>())},
-		{"=$", OperatorIdentity(builtin_func(lwc::it_elast), 0, -2, true, new TypeImpl<LASTVariable>)}
+		{"=$", OperatorIdentity(builtin_func(lwc::it_elast), 0, -2, true, new TypeImpl<LASTVariable>)},
+		//{";", OperatorIdentity(builtin_func(lwc::nihil), 0, -999, true, new TypeImpl<NumVar>())},
 	};
 
 	static std::unordered_map<std::string, BuiltInIdentity> func_ids = {
 		{"while", BuiltInIdentity(builtin_func(lwc::while_loop), new TypeImpl<NumVar>())},
 		{"print", BuiltInIdentity(builtin_func(lwc::print), new TypeImpl<NumVar>())},
-		{"scast", BuiltInIdentity(builtin_func(lwc::scast), new TypeImpl<NumVar>())}
+		{"scast", BuiltInIdentity(builtin_func(lwc::scast), new TypeImpl<NumVar>())},
+		{"pxnor", BuiltInIdentity(builtin_func(lwc::sexecute), new TypeImpl<NumVar>())}
 	};
 
 	bool is_num(const std::string& s);

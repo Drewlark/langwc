@@ -64,3 +64,6 @@ For dynamic typing: LAST lvar leaves could reach into vector space (using number
 Typing done!
 
 It appears that there is some bug-related limit whereby operator lengths greater than 2 will break. Must fix lexer.
+
+Lots of bugs in Lexer. Particularly when it comes to operators. Nested functions appear broken to some extent. 
+This is next before enduser functions

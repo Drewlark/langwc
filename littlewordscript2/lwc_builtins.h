@@ -42,6 +42,10 @@ namespace lwc {
 
 	variable& bad_name(variable** vars, variable& reg, const int& argc);
 
+	variable& nihil(variable** vars, variable& reg, const int& argc);
+
+	variable& sexecute(variable** vars, variable& reg, const int& argc);
+
 
 	
 }
