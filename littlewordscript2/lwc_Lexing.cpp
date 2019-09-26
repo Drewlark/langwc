@@ -13,6 +13,12 @@ namespace lwc {
 		}
 	}
 	
+	void TokenQueue::check_for_argness() {
+		if (!func_stack.empty()) {
+			++func_stack.top()->argn;
+		}
+	}
+
 	void TokenQueue::add_unknown(std::string& unk, QState& qs) {
 		//std::cout << "unk: " << unk << endl;
 		if (unk.length() > 0) {
@@ -22,9 +28,7 @@ namespace lwc {
 				data.push_back(ParseToken(unk, TokenType::name, nullptr));
 			qs = QState::def;
 			unk.clear();
-			if (!func_stack.empty()) {
-				++func_stack.top()->argn;
-			}
+			check_for_argness();
 		}
 	}
 
@@ -40,7 +44,9 @@ namespace lwc {
 				--paren_depth;
 				if (paren_depth == 0 && !func_stack.empty()) {
 					func_stack.pop();
+					check_for_argness();
 				}
+				
 			}
 			else if (c == '(') {
 				if (!tmp.empty()) {

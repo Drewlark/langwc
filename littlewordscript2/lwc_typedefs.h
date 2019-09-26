@@ -76,22 +76,12 @@ namespace lwc {
 		bool operator<=(const ParseToken& pt) { return precedence <= pt.precedence; }
 	};
 
-	class BaseFunction {
-		bool is_builtin = true;
-	public:
-		BaseFunction(std::unordered_map<std::string, lwc::variable>& varmap, std::string name) {
-			if (varmap.count(name) > 0) {
-				is_builtin = false;
-			}
-
-		}
-	};
-
 	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
 		static enum class QState { def, op, num, elastic };
 		std::deque<lwc::ParseToken> data;
 		std::stack<lwc::ParseToken*> func_stack;
 		int paren_depth = 0;
+		void check_for_argness(); //Checks if func stack is not empty, and then increments argn for that func if not. Only call this when var-like token is found.
 		void add_unknown(std::string& unk, QState& qs);
 		bool checkparens(std::string& tmp, char& c, QState& qs, bool& pcheck);
 	public:
