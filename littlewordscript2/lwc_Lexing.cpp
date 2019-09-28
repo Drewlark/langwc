@@ -152,7 +152,7 @@ namespace lwc {
 			}
 		}
 		add_unknown(temp, qs);
-#ifndef NDEBUG
+#ifdef _DEBUG
 		auto newq = data;
 		while (!newq.empty()) {
 			std::cout << newq.front().val << " ";

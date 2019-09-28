@@ -122,7 +122,7 @@ namespace lwc {
 				op_stk.pop();
 			}
 		}
-#ifndef NDEBUG
+#ifdef _DEBUG
 		auto newq = out_q;
 		while (!newq.empty()) {
 			std::cout << newq.front().val << " ";
