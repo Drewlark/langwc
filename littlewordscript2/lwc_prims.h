@@ -1,4 +1,5 @@
 #include <sstream>
+#include <string>
 #ifndef H_LWC_PRIMS
 #define H_LWC_PRIMS
 namespace lwc {
@@ -15,6 +16,7 @@ namespace lwc {
 	private:
 	public:
 		virtual long get() { return 0; }
+		virtual void* get_vp(void*& reg) { *(long*)reg = this->get();  return reg; }
 		BaseVariable() {};
 		virtual BaseVariable operator+(BaseVariable& bv) { return BaseVariable(); }
 		virtual BaseVariable operator-(BaseVariable& bv) { return BaseVariable(); }
@@ -37,8 +39,11 @@ namespace lwc {
 		int8_t precedence = 0;
 		bool rval = false;
 		RegisterType* rt = nullptr;
+		std::string debug_name;
 		OperatorIdentity(lwc::builtin_func _fnc, bool _leftassoc,
-			int8_t _precedence, bool _rval = false, RegisterType* _rt = nullptr) : fnc(_fnc), leftassoc(_leftassoc), precedence(_precedence), rval(_rval), rt(_rt) {};
+			int8_t _precedence, bool _rval = false, 
+			RegisterType* _rt = nullptr, std::string _debug_name = "") : fnc(_fnc), leftassoc(_leftassoc),
+			precedence(_precedence), rval(_rval), rt(_rt), debug_name(_debug_name) {};
 		OperatorIdentity() { delete rt; };
 		~OperatorIdentity() {};
 	};

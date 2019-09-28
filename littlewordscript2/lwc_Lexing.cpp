@@ -49,7 +49,7 @@ namespace lwc {
 				
 			}
 			else if (c == '(') {
-				if (!tmp.empty()) {
+				if (!tmp.empty() && !op_ids.count(tmp)) {
 					data.push_back(ParseToken(tmp, TokenType::func, func_ids[tmp].rt));
 					func_stack.push(&data.back());
 					tmp.clear();
@@ -59,6 +59,9 @@ namespace lwc {
 				ret = true;
 			}
 			if (ret) qs = QState::def;
+		}
+		else {
+			ret = c == '(' || c == ')';// if this function has already been called, we still want to know the nature of the character without the extra operations
 		}
 		return ret;
 	}
@@ -113,7 +116,8 @@ namespace lwc {
 				add_unknown(temp, qs);
 				qs = QState::elastic;
 			}
-			else if (op_ids.count(std::string(1, c)) && !op_ids.count(temp + c)) {
+
+			else if ((reserved_chars.count(c) && !op_ids.count(temp + c)) || reserved_chars.count(c) && temp.empty()) {
 				add_unknown(temp, qs);
 				temp = c;
 				qs = QState::op;
@@ -148,6 +152,14 @@ namespace lwc {
 			}
 		}
 		add_unknown(temp, qs);
+#ifndef NDEBUG
+		auto newq = data;
+		while (!newq.empty()) {
+			std::cout << newq.front().val << " ";
+			newq.pop_front();
+		}
+		std::cout << std::endl;
+#endif
 	}
 
 	ParseToken TokenQueue::pop()

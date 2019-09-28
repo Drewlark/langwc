@@ -95,6 +95,7 @@ namespace lwc {
 	
 	variable& nihil(variable** vars, variable& reg, const int& argc)
 	{
+		//std::cout << *vars[0] << " " << *vars[1];
 		return reg;
 	}
 	
@@ -112,7 +113,7 @@ namespace lwc {
 			}
 			int weird = 0;
 			for (int i = 0; i < argc; i++) {
-				weird ^= sexys[i].get(); //TODO rather than XOR outputs, should go into an ArrayVariable of some sort
+				weird ^= sexys[i].get(); // TODO rather than XORing outputs, should go into an ArrayVariable of some sort
 			}
 			NumVar nv(weird);
 			*reg = nv;

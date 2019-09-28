@@ -27,6 +27,7 @@ namespace lwc {
 		NumVar(BaseVariable bv) : n(bv.get()) {};
 		NumVar(long _n) : n(_n) {};
 		long get()  { return n; };
+		void* get_vp(void*& reg) { *(long*)reg = this->get();  return reg; }
 		operator long() const { return n; }
 		BaseVariable operator+( BaseVariable& bv) { return NumVar(n + bv.get());}
 		BaseVariable operator-( BaseVariable& bv) { return NumVar(n - bv.get()); }
@@ -69,7 +70,7 @@ namespace lwc {
 		RegisterType* rt = nullptr;
 
 		ParseToken(std::string _val, TokenType _tt, RegisterType* _rt, int _precedence = 0, bool _leftassoc = 0, bool _rval = false);
-		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt) {}; //No value is possible here because the string value is irrelevant to an op
+		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt), val(oid.debug_name) {}; //No value is possible here because the string value is irrelevant to an op
 		bool operator<(const ParseToken& pt) { return precedence < pt.precedence; }
 		bool operator>(const ParseToken& pt) { return precedence > pt.precedence; }
 		bool operator>=(const ParseToken& pt) { return precedence >= pt.precedence; }
@@ -184,6 +185,7 @@ namespace lwc {
 		LASTVariable(LineNode* _linenode) : linenode(_linenode) {}
 		LASTVariable() {}
 		long get();
+		void* get_vp(void*& reg) { *(long*)reg = this->get();  return reg; }
 		RegisterType const* const get_typei();
 	};
 
@@ -195,6 +197,7 @@ namespace lwc {
 		CodeBlockVariable(block_func& _code_block) : code_block(_code_block) {}
 		CodeBlockVariable() {}
 		long get();
+		void* get_vp(void*& reg) { *(long*)reg = this->get();  return reg; }
 		RegisterType const* const get_typei();
 	};
 

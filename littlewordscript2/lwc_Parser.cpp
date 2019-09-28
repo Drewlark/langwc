@@ -1,7 +1,7 @@
 #include "lwc_Parser.h"
 
 namespace lwc {
-
+	static const float f = (1 / 2);
 	bool is_num(const std::string& s)
 	{
 		for (char c : s) { if (!isdigit(c)) return false; }
@@ -61,7 +61,7 @@ namespace lwc {
 	{
 		std::queue<ParseToken> out_q; //output queue
 		std::stack<ParseToken> op_stk; //operator stack
-
+		
 		while (!tq.empty()) {
 			ParseToken pt = tq.pop();
 			switch (pt.tt) {
@@ -122,6 +122,14 @@ namespace lwc {
 				op_stk.pop();
 			}
 		}
+#ifndef NDEBUG
+		auto newq = out_q;
+		while (!newq.empty()) {
+			std::cout << newq.front().val << " ";
+			newq.pop();
+		}
+		std::cout << std::endl;
+#endif
 		return out_q;
 	}
 

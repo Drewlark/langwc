@@ -1,23 +1,28 @@
 bi = 0
+n2 =$ `(250*250)+(bi=1)`
+
+a = (250+5)+(1*10)
+print(a)
+
 x =$ `bi<3`
-
 n1 =$ `25*25`
-n2 =$ `250*250`
 
-print(pxnor(n1,n2))
+rand = 6
+
+print(pxnor(`rand=2`,`rand=1`))
 
 while(x){
  a=0
  b=1
- c=1
+ c=0
  iter=0
  while(`iter<10`){
   a=c+b
   print(iter, a, b, c)
   c=b
   b=a
-  iter+=1;
+  iter+=1
  }
  print()
- bi+=1;
+ bi+=1
 }

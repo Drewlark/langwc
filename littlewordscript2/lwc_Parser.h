@@ -1,24 +1,27 @@
 #include <iostream>
 #include <string>
+#include <set>
 #include "lwc_typedefs.h"
 #include "lwc_builtins.h"
 #ifndef H_PARSER
 #define H_PARSER
 namespace lwc {
 
+	static const set<char> reserved_chars = { '+', '*', '-', '/', '=', '<', '>', '$', ';' };
+
 	static const std::unordered_map<std::string, OperatorIdentity> op_ids = {
-		{"+", OperatorIdentity(builtin_func(lwc::add), 0, 0, true, new TypeImpl<NumVar>())}, //HACK temporary solution to statically define return types.
-		{"*", OperatorIdentity(builtin_func(lwc::mult), 0, 1, true, new TypeImpl<NumVar>())},
-		{"-", OperatorIdentity(builtin_func(lwc::sub), 1, 0, true, new TypeImpl<NumVar>())},
-		{"/", OperatorIdentity(builtin_func(lwc::div), 1, 1, true, new TypeImpl<NumVar>())},
-		{"=", OperatorIdentity(builtin_func(lwc::assign), 0, -2, true, new TypeImpl<NumVar>())},
-		{"<", OperatorIdentity(builtin_func(lwc::is_lessthan), 0, -1, true, new TypeImpl<NumVar>())},
-		{">", OperatorIdentity(builtin_func(lwc::is_greaterthan), 0, -1, true, new TypeImpl<NumVar>())},
-		{"+=", OperatorIdentity(builtin_func(lwc::incrementby), 0, -2, true, new TypeImpl<NumVar>())},
-		{"=>", OperatorIdentity(builtin_func(lwc::refassign), 0, -2, true, new TypeImpl<NumVar>())},
-		{"$", OperatorIdentity(builtin_func(lwc::bad_name), 0, -2, true, new TypeImpl<NumVar>())},
-		{"=$", OperatorIdentity(builtin_func(lwc::it_elast), 0, -2, true, new TypeImpl<LASTVariable>)},
-		//{";", OperatorIdentity(builtin_func(lwc::nihil), 0, -999, true, new TypeImpl<NumVar>())},
+		{"+", OperatorIdentity(builtin_func(lwc::add), false, 0, true, new TypeImpl<NumVar>(), "ADD")}, //HACK temporary solution to statically define return types.
+		{"*", OperatorIdentity(builtin_func(lwc::mult), false , 1, true, new TypeImpl<NumVar>(), "MULT")},
+		{"-", OperatorIdentity(builtin_func(lwc::sub), true, 0, true, new TypeImpl<NumVar>(), "SUB")},
+		{"/", OperatorIdentity(builtin_func(lwc::div), true, 1, true, new TypeImpl<NumVar>(), "DIV")},
+		{"=", OperatorIdentity(builtin_func(lwc::assign), false , -2, true, new TypeImpl<NumVar>(), "ASGN")},
+		{"<", OperatorIdentity(builtin_func(lwc::is_lessthan), false, -1, true, new TypeImpl<NumVar>(), "LSSR")},
+		{">", OperatorIdentity(builtin_func(lwc::is_greaterthan), false, -1, true, new TypeImpl<NumVar>(), "GRTR")},
+		{"+=", OperatorIdentity(builtin_func(lwc::incrementby), false, -2, true, new TypeImpl<NumVar>(), "INCR")},
+		{"=>", OperatorIdentity(builtin_func(lwc::refassign), false , -2, true, new TypeImpl<NumVar>(), "RAS")},
+		{"$", OperatorIdentity(builtin_func(lwc::bad_name), false, -2, true, new TypeImpl<NumVar>(), "BN")},
+		{"=$", OperatorIdentity(builtin_func(lwc::it_elast), false, -2, true, new TypeImpl<LASTVariable>, "I_E")},
+		{";", OperatorIdentity(builtin_func(lwc::nihil), false, -999, true, new TypeImpl<NumVar>(), "NHL")},
 	};
 
 	static std::unordered_map<std::string, BuiltInIdentity> func_ids = {
