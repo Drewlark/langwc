@@ -7,9 +7,7 @@ print(a)
 x =$ `bi<3`
 n1 =$ `25*25`
 
-rand = 6
-
-print(pxnor(`rand=2`,`rand=1`))
+print(pxnor(n1,n2))
 
 while(x){
  a=0
