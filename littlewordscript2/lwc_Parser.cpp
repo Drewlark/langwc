@@ -1,4 +1,5 @@
 #include "lwc_Parser.h"
+#include <algorithm>
 
 namespace lwc {
 	static const float f = (1 / 2);
@@ -40,8 +41,8 @@ namespace lwc {
 	const static TypeImpl<LASTVariable> LAST_TYPEI;
 	const static TypeImpl<CodeBlockVariable> CB_TYPEI;
 
-	const RegisterType const* CodeBlockVariable::typei = &CB_TYPEI;
-	const RegisterType const* LASTVariable::typei = &LAST_TYPEI;
+	const RegisterType* CodeBlockVariable::typei = &CB_TYPEI;
+	const RegisterType* LASTVariable::typei = &LAST_TYPEI;
 
 
 	long CodeBlockVariable::get()
