@@ -8,7 +8,9 @@
 //Testing git push from different machine
 
 void remove_whitespace(std::string &str) {
-	str.erase(std::remove_if(str.begin(), str.end(), isspace), str.end());
+	string fin;
+	for (const char& c : str) if (!isspace(c)) fin.push_back(c);
+	str = fin;
 }
 
 int main(int argc, char* argv[])
