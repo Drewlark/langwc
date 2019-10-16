@@ -17,7 +17,7 @@ namespace lwc {
 
 	struct NumVar : BaseVariable {
 	private:
-		const static RegisterType const* typei;
+		const static RegisterType* typei;
 	protected:
 		long n;
 	public:
@@ -82,7 +82,7 @@ namespace lwc {
 	};
 
 	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
-		static enum class QState { def, op, num, elastic };
+		enum class QState { def, op, num, elastic };
 		std::deque<lwc::ParseToken> data;
 		std::stack<lwc::ParseToken*> func_stack;
 		int paren_depth = 0;
@@ -140,7 +140,7 @@ namespace lwc {
 		Scope* parent = nullptr;
 		Scope(Scope* _parent = nullptr) : parent(_parent) {};
 		
-		variable* find_name_upward(const std::string& const name)
+		variable* find_name_upward(const std::string& name)
 		{
 			if (names.count(name)) {
 				return &names[name];
@@ -158,7 +158,7 @@ namespace lwc {
 		}
 
 		template <class T = NumVar> // T represents type to initialize to, should always be derivative of BaseVariable
-		variable* handle_name(const std::string& const name) {
+		variable* handle_name(const std::string& name) {
 			static_assert(std::is_base_of<BaseVariable, T>::value, "T must derive from lwc::BaseVariable");
 			if (names.count(name)) {
 				return &names[name];
@@ -168,8 +168,8 @@ namespace lwc {
 				return &names[name];
 			}
 		}
-		int count(const std::string& const name) { return names.count(name); }
-		variable* operator[](const std::string& const key) { return find_name_upward(key); }
+		int count(std::string& name) { return names.count(name); }
+		variable* operator[](std::string& key) { return find_name_upward(key); }
 
 	};
 
@@ -190,7 +190,7 @@ namespace lwc {
 	class LASTVariable : public BaseVariable // `` backtick expression variable (single LAST/Line)
 	{
 		std::shared_ptr<LineNode> linenode;
-		static const RegisterType const* typei;
+		static const RegisterType* typei;
 	public:
 		LASTVariable(LineNode* _linenode) : linenode(_linenode) {}
 		LASTVariable() {}
@@ -202,7 +202,7 @@ namespace lwc {
 	class CodeBlockVariable : public BaseVariable //variable wrapping a vector of type LAST
 	{
 		block_func code_block;
-		static const RegisterType const* typei;
+		static const RegisterType* typei;
 	public:
 		CodeBlockVariable(block_func& _code_block) : code_block(_code_block) {}
 		CodeBlockVariable() {}
