@@ -41,7 +41,7 @@ namespace lwc {
 
 	lwc::variable &evaluate_line(lwc::LineNode* const node);
 
-	lwc::variable &evaluate_lines(block_func lines);
+	lwc::variable &evaluate_lines(block_func &lines);
 
 	block_func parse_from_slines(std::vector<std::string> slines);
 }

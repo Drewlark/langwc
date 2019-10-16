@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 		auto end = std::chrono::high_resolution_clock::now();
 		auto evaltime = (end - start_eval);
 		auto fulltime = (end - start);
-		std::cout << "Done Evaluating" << std::endl << std::endl;
+		std::cout << "Done Evaluating\n" << std::endl;
 		std::cout << "FULL RUNNING TIME: " << std::chrono::duration<double, std::milli>(fulltime).count() << std::endl;
 		std::cout << "BUILDING TIME: " << std::chrono::duration<double, std::milli>(fulltime - evaltime).count() << std::endl;
 		std::cout << "BUILT EVALUATION TIME: " << std::chrono::duration<double, std::milli>(evaltime).count() << std::endl;
@@ -52,6 +52,6 @@ int main(int argc, char* argv[])
 	else {
 		std::cout << "File: " << file_name << " could not be opened." << std::endl;
 	}
-	//getchar(); //pause execution so breakpoint is unneeded. Should be disabled in performance checks of course.
+	getchar(); //pause execution so breakpoint is unneeded. Should be disabled in performance checks of course.
 	return 0;
 }

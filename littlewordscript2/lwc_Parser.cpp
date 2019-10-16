@@ -184,6 +184,7 @@ namespace lwc {
 			else {
 				variable v = convert_symbol(pt, scope);
 				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(scope[pt.val], pt.rt, pt.val)); //use mapped value for lvals (will be useful for garbage collection)
+				//std::cout << "uh oh\n";
 				//breadthwise.push_back(pds.top());
 			}
 		}
@@ -220,7 +221,7 @@ namespace lwc {
 		return node->func(node->arg_arr, node->rgstr, node->sz);
 	}
 
-	lwc::variable& evaluate_lines(block_func lines) {
+	lwc::variable& evaluate_lines(block_func& lines) {
 		lwc::variable* var = nullptr;
 		for (LAST &line : lines) {
 			var = &evaluate_line(line.root);

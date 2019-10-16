@@ -7,6 +7,7 @@
 #include <queue>
 #include <unordered_map>
 #include <type_traits> // For ensuring certain templated functions only use template classes deriving from BaseVariable (defined in lwc_prims.h)
+#include <iostream>
 #include "lwc_prims.h"
 #ifndef LWC_TYPEDEF
 #define LWC_TYPEDEF
@@ -181,7 +182,11 @@ namespace lwc {
 		std::vector<LineNode*> breadthwise;
 		void rebuild();
 		LAST(std::queue<ParseToken> tq, Scope& scope);
-		~LAST() {}
+		~LAST() {
+#ifdef _DEBUG
+			std::cout << "LAST formed with default constructor\n";
+#endif
+		}
 	};
 	typedef std::vector<LAST> block_func;
 
