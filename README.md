@@ -1,5 +1,5 @@
-# LWC (language W___ C___ or any other acronym that fits in LWC)
-LWC is a scripting language that is written entirely from scratch with an interpreter written in standard C14. It is a fairly naive approach, as I have somewhat intentionally not researched implementations of any other scripting languages. It is a complete rewrite of an earlier version which was extremely slow and even more naive. It only uses longs (will probably move to 64 bit integers soon) as a datatype, though other datatypes will eventually be virtualized (this is already the case on some level)
+# LWC (Language Without Compassion) r any other acronym that fits in LWC)
+LWC is a scripting language that is written entirely from scratch with an interpreter written in standard C++14 (though I am considering opening up the gates to everything in C++17). It is a fairly naive approach, as I have somewhat intentionally not researched implementations of any other scripting languages. It is a complete rewrite of an earlier version which was extremely slow and even more naive. It only uses longs (will probably move to 64 bit integers soon) as a datatype, though other datatypes will eventually be virtualized (this is already the case on some level)
 
 It is my second attempt at designing a scripting language. The first language worked entirely on top of the input string and was very slow. This new version has been designed with run-time performance deeply in mind. It is very much a work in progress.
 
