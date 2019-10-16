@@ -52,6 +52,6 @@ int main(int argc, char* argv[])
 	else {
 		std::cout << "File: " << file_name << " could not be opened." << std::endl;
 	}
-	getchar(); //pause execution so breakpoint is unneeded. Should be disabled in performance checks of course.
+	//getchar(); //pause execution so breakpoint is unneeded. Should be disabled in performance checks of course.
 	return 0;
 }
