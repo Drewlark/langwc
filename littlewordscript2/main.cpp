@@ -15,7 +15,7 @@ void remove_whitespace(std::string &str) {
 
 int main(int argc, char* argv[])
 {
-	std::clock_t start = clock();
+	std::clock_t start = std::clock();
 	std::string file_name = (argc > 1 ? argv[1] : "first_test.lwc");
 	std::fstream fs;
 	std::string s;
@@ -36,11 +36,11 @@ int main(int argc, char* argv[])
 		lwc::block_func root_scope(lwc::parse_from_slines(words));
 		std::cout << "build complete" << std::endl;
 
-		std::clock_t start_eval = clock();
+		std::clock_t start_eval = std::clock();
 		lwc::evaluate_lines(root_scope);
-		clock_t end = clock();
-		double evaltime = (double)(end - start_eval);
-		double fulltime = (double)(end - start);
+		std::clock_t end = std::clock();
+		int evaltime = (end - start_eval);
+		int fulltime = (end - start);
 		std::cout << "Done Evaluating" << std::endl << std::endl;
 		std::cout << "FULL RUNNING TIME: " << fulltime << std::endl;
 		std::cout << "BUILDING TIME: " << fulltime - evaltime << std::endl;
