@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <ctime>
+#include <algorithm>
 #include <string>
 #include "lwc_Parser.h"
 //Testing git push from different machine
