@@ -11,7 +11,7 @@ namespace lwc {
 		delete[] arg_arr;
 		branches.shrink_to_fit();
 		sz = branches.size();
-		arg_arr = new variable*[sz];
+		arg_arr = new variable * [sz];
 	}
 
 	void LineNode::fit_register() {
@@ -61,7 +61,7 @@ namespace lwc {
 	{
 		std::queue<ParseToken> out_q; //output queue
 		std::stack<ParseToken> op_stk; //operator stack
-		
+
 		while (!tq.empty()) {
 			ParseToken pt = tq.pop();
 			switch (pt.tt) {
@@ -168,7 +168,7 @@ namespace lwc {
 				LineNode* fln = new LineNode(pt.opfunc, pt.rt, temp, pt.rval);
 				if (pt.brace_start) {
 					block_node = fln;
-					block_starts += 1;	
+					block_starts += 1;
 				}
 
 				pds.push(fln); //create and push operator node with operand children
@@ -182,11 +182,27 @@ namespace lwc {
 			}
 			else {
 				variable v = convert_symbol(pt, scope);
-				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(scope[pt.val], pt.rt)); //use mapped value for lvals (will be useful for garbage collection)
+				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(scope[pt.val], pt.rt, pt.val)); //use mapped value for lvals (will be useful for garbage collection)
+				breadthwise.push_back(pds.top());
 			}
 		}
 		if (!pds.empty()) {
 			root = pds.top(); //remaining node is the root
+		}
+#ifdef _DEBUG
+		rebuild();
+#endif // _DEBUG
+	}
+
+
+	// Instead of using hashing every function call, scope could return two ids which
+	//		would point to pointers on an array held by Scope
+	void LAST::rebuild() {
+		for (LineNode* &lnp : breadthwise) {
+			//std::cout << "bw" << lnp->is_leaf << std::endl;
+			if (!(lnp->is_rval)) {
+				std::cout << "LVAL_INFO " << sizeof(lnp) << " " <<lnp->name << " " << lnp->lvar << std::endl;
+			}
 		}
 	}
 

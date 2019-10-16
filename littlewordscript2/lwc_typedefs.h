@@ -71,10 +71,14 @@ namespace lwc {
 
 		ParseToken(std::string _val, TokenType _tt, RegisterType* _rt, int _precedence = 0, bool _leftassoc = 0, bool _rval = false);
 		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt), val(oid.debug_name) {}; //No value is possible here because the string value is irrelevant to an op
-		bool operator<(const ParseToken& pt) { return precedence < pt.precedence; }
-		bool operator>(const ParseToken& pt) { return precedence > pt.precedence; }
-		bool operator>=(const ParseToken& pt) { return precedence >= pt.precedence; }
-		bool operator<=(const ParseToken& pt) { return precedence <= pt.precedence; }
+		bool operator<(const ParseToken& pt) 
+		{ return precedence < pt.precedence; }
+		bool operator>(const ParseToken& pt) 
+		{ return precedence > pt.precedence; }
+		bool operator>=(const ParseToken& pt) 
+		{ return precedence >= pt.precedence; }
+		bool operator<=(const ParseToken& pt) 
+		{ return precedence <= pt.precedence; }
 	};
 
 	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
@@ -104,11 +108,13 @@ namespace lwc {
 		variable var = nullptr;
 		variable* lvar = nullptr;
 		bool is_leaf = false;
+		std::string name; // important for debugging
 
 		variable** arg_arr = nullptr;
 		int sz = 0;
 		RegisterType* rt = nullptr;
 		variable rgstr = nullptr;
+
 
 
 		void fit_args();
@@ -117,9 +123,9 @@ namespace lwc {
 		LineNode(builtin_func _func, RegisterType* _rt, std::vector<LineNode*> _branches = {}, bool rval = false);
 
 		LineNode(variable _var, RegisterType* _rt) : var(_var), rt(_rt) { is_leaf = true; }
-		LineNode(variable* _lvar, RegisterType* _rt) : lvar(_lvar), rt(_rt) { is_leaf = true; is_rval = false; }
+		LineNode(variable* _lvar, RegisterType* _rt, std::string _name) : lvar(_lvar), rt(_rt), name(_name) { is_leaf = true; is_rval = false; }
 		LineNode() { is_leaf = true; }
-		~LineNode() { delete[] arg_arr; }
+		~LineNode() { delete[] arg_arr; for (auto br : branches) delete br;}
 
 		void add_branch(LineNode* ln);
 
@@ -129,7 +135,6 @@ namespace lwc {
 	};
 
 	class Scope {
-		//Currently unused
 		std::unordered_map<std::string, variable> names;
 	public:
 		Scope* parent = nullptr;
@@ -148,6 +153,10 @@ namespace lwc {
 			}
 		}
 		
+		bool is_var_local(std::string s) {
+			return names.count(s);
+		}
+
 		template <class T = NumVar> // T represents type to initialize to, should always be derivative of BaseVariable
 		variable* handle_name(const std::string& const name) {
 			static_assert(std::is_base_of<BaseVariable, T>::value, "T must derive from lwc::BaseVariable");
@@ -159,7 +168,6 @@ namespace lwc {
 				return &names[name];
 			}
 		}
-
 		int count(const std::string& const name) { return names.count(name); }
 		variable* operator[](const std::string& const key) { return find_name_upward(key); }
 
@@ -170,6 +178,8 @@ namespace lwc {
 		uint8_t block_ends = 0;
 		uint8_t block_starts = 0;
 		LineNode* block_node = nullptr;
+		std::vector<LineNode*> breadthwise;
+		void rebuild();
 		LAST(std::queue<ParseToken> tq, Scope& scope);
 		~LAST() {}
 	};

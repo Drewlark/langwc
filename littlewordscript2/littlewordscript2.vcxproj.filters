@@ -30,6 +30,9 @@
     <ClInclude Include="lwc_err_codes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lwc_UserFuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
