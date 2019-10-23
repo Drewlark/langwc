@@ -222,7 +222,7 @@ namespace lwc {
 		}
 	}
 
-	lwc::variable &evaluate_line(lwc::LineNode& const node) {
+	lwc::variable &evaluate_line(lwc::LineNode& node) {
 
 		for (int i = 0; i < node.sz; ++i) {
 			if (node.get_branch(i)->is_leaf) {
