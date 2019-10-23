@@ -98,9 +98,17 @@ namespace lwc {
 	};
 
 	struct LAST;
+	class LineNode;
+
+	typedef std::vector<unsigned int> branches_t;
+	typedef std::vector<LineNode*> master_lns;
 
 	class LineNode {
-		std::vector<LineNode*> branches;
+		friend struct LAST;
+		branches_t branches;
+		master_lns * const master;
+		
+		static master_lns* LEAF_MASTER;
 	public:
 		builtin_func func = nullptr;
 		std::vector<LAST> output_block;
@@ -121,12 +129,12 @@ namespace lwc {
 		void fit_args();
 		void fit_register();
 
-		LineNode(builtin_func _func, RegisterType* _rt, std::vector<LineNode*> _branches = {}, bool rval = false);
+		LineNode(master_lns *  _master, builtin_func _func, RegisterType* _rt, branches_t _branches = {}, bool rval = false);
 
-		LineNode(variable _var, RegisterType* _rt) : var(_var), rt(_rt) { is_leaf = true; }
-		LineNode(variable* _lvar, RegisterType* _rt, std::string _name) : lvar(_lvar), rt(_rt), name(_name) { is_leaf = true; is_rval = false; }
-		LineNode() { is_leaf = true; }
-		~LineNode() { delete[] arg_arr; for (auto br : branches) delete br;}
+		LineNode(variable _var, RegisterType* _rt) : var(_var), rt(_rt), master(LEAF_MASTER) { is_leaf = true;}
+		LineNode(variable* _lvar, RegisterType* _rt, std::string _name) : lvar(_lvar), rt(_rt), name(_name), master(LEAF_MASTER) { is_leaf = true; is_rval = false;}
+		LineNode() : master(LEAF_MASTER) { is_leaf = true;}
+		~LineNode() { delete[] arg_arr;}
 
 		void add_branch(LineNode* ln);
 
@@ -135,12 +143,32 @@ namespace lwc {
 		LineNode* get_branch(const int& index);
 	};
 
+	class Scope;
+
+	struct LAST { //"Line" abstract syntax tree
+		master_lns* master = new master_lns(); // TODO safe deletion of these.. can be tricky. shared ptr necessary?
+		LineNode* root = nullptr;
+		uint8_t block_ends = 0;
+		uint8_t block_starts = 0;
+		LineNode* block_node = nullptr;
+		std::vector<LineNode*> breadthwise;
+		void rebuild();
+		LAST(std::queue<ParseToken> tq, Scope& scope);
+		//LAST(const LAST&);
+		~LAST() {
+#if defined(_DEBUG) || defined(SHOW_LAST_DEL)
+			std::cout << "LAST destroyed with default destructor\n";
+#endif
+		}
+	};
+	typedef std::vector<LAST> block_func;
+
 	class Scope {
 		std::unordered_map<std::string, variable> names;
 	public:
 		Scope* parent = nullptr;
 		Scope(Scope* _parent = nullptr) : parent(_parent) {};
-		
+
 		variable* find_name_upward(const std::string& name)
 		{
 			if (names.count(name)) {
@@ -153,13 +181,13 @@ namespace lwc {
 				return nullptr;
 			}
 		}
-		
+
 		bool is_var_local(std::string s) {
 			return names.count(s);
 		}
 
 		template <class T = NumVar> // T represents type to initialize to, should always be derivative of BaseVariable
-		variable* handle_name(const std::string& name) {
+		variable * handle_name(const std::string & name) {
 			static_assert(std::is_base_of<BaseVariable, T>::value, "T must derive from lwc::BaseVariable");
 			if (names.count(name)) {
 				return &names[name];
@@ -173,24 +201,6 @@ namespace lwc {
 		variable* operator[](std::string& key) { return find_name_upward(key); }
 
 	};
-
-	struct LAST { //"Line" abstract syntax tree
-		LineNode* root = nullptr;
-		uint8_t block_ends = 0;
-		uint8_t block_starts = 0;
-		LineNode* block_node = nullptr;
-		std::vector<LineNode*> breadthwise;
-		void rebuild();
-		LAST(std::queue<ParseToken> tq, Scope& scope);
-		~LAST() {
-#ifdef _DEBUG
-			std::cout << "LAST formed with default constructor\n";
-#endif
-		}
-	};
-	typedef std::vector<LAST> block_func;
-
-
 
 	class LASTVariable : public BaseVariable // `` backtick expression variable (single LAST/Line)
 	{

@@ -39,7 +39,7 @@ namespace lwc {
 
 	lwc::variable convert_symbol(const ParseToken& pt, Scope& scope);
 
-	lwc::variable &evaluate_line(lwc::LineNode* const node);
+	lwc::variable &evaluate_line(lwc::LineNode& const node);
 
 	lwc::variable &evaluate_lines(block_func &lines);
 

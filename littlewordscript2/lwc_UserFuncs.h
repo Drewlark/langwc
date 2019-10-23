@@ -15,9 +15,21 @@ namespace lwc {
 		hmm...
 		functions could be compiled differently?
 		*/
+		block_func templ;
 		std::vector<std::vector<unsigned int>> vec_of_refs_to_all_lvars; // uint refers to the position of a line node containing [some lvar, the same as all others in its vector] in the breadthwise
+		UserFunctionTemplate(block_func& bf) : templ(bf){
+			for (LAST last : templ) {
+				for (auto sec : vec_of_refs_to_all_lvars) {
+					auto val = last.breadthwise.sec[0];
+					for (auto item : sec) {
 
+					}
+				}
+			}
+		}
 	};
+
+
 
 	// Every userfunction will have to essentially copy all the LASTS and change local variables in the last to point to new locations
 	class UserFunctionEnv { 

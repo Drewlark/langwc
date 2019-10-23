@@ -1,14 +1,17 @@
 bi = 0
-n2 =$ `(250*250)+(bi=1)`
+# lamba-like code captures called 'elastics
+n2 =$ `(250*250)+(bi=1)` 
 
 awe =$ `(250+5)+(1*10)`
 print(awe)
 
-x =$ `bi<1000000`
+x =$ `bi<3`
 n1 =$ `25*25`
+# easy multithreading
 
-pxnor(n1, n2)
+pxnor(n1, n2) 
 
+# fibonacci sequence calculator
 while(x){
  a=0
  b=1
@@ -16,11 +19,11 @@ while(x){
  iter=0
  while(`iter<10`){
   a=c+b
-# print(iter, a, b, c)
+  print(iter, a, b, c)
   c=b
   b=a
   iter+=1
  }
-# print()
+ print()
  bi+=1
 }

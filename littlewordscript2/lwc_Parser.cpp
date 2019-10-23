@@ -1,8 +1,12 @@
 #include "lwc_Parser.h"
 #include <algorithm>
+#ifdef _DEBUG
+#include <functional>
+std::vector<std::reference_wrapper<lwc::LineNode>> debug_set;
+#endif
 
 namespace lwc {
-	static const float f = (1 / 2);
+
 	bool is_num(const std::string& s)
 	{
 		for (char c : s) { if (!isdigit(c)) return false; }
@@ -16,26 +20,32 @@ namespace lwc {
 	}
 
 	void LineNode::fit_register() {
-		BaseVariable* tempbv = (BaseVariable*)rt->allocate();
-		rgstr = variable(tempbv);
+		//if (!this->is_leaf) {
+			BaseVariable* tempbv = (BaseVariable*)rt->allocate();
+			rgstr = variable(tempbv);
+		//}
 	}
 
-	LineNode::LineNode(builtin_func _func, RegisterType* _rt, std::vector<LineNode*> _branches, bool rval) : func(_func), rt(_rt), branches(_branches), is_rval(rval)
+	LineNode::LineNode(master_lns * _master, builtin_func _func, RegisterType* _rt, branches_t _branches, bool rval) : func(_func), rt(_rt), branches(_branches), is_rval(rval), master(_master)
 	{
 		fit_args();
 		fit_register();
+#ifdef _DEBUG
+		debug_set.push_back(*this);
+#endif
+		;;
 	}
 
 	void LineNode::add_branch(LineNode* ln) {
-		branches.push_back(ln);
+		master->push_back(ln);
+		branches.push_back(master->size()-1);
 		fit_args();
 	}
 
 	LineNode* LineNode::get_branch(const int& index) {
-		return branches[index];
+		return (*master)[branches[index]];
 	}
-
-
+ 
 	Scope global; //HACK: eventually pass through global scope
 
 	const static TypeImpl<LASTVariable> LAST_TYPEI;
@@ -53,7 +63,7 @@ namespace lwc {
 
 	long LASTVariable::get()
 	{
-		variable v = evaluate_line(linenode.get());
+		variable v = evaluate_line(*linenode.get());
 		return v->get();
 	}
 	RegisterType const* const LASTVariable::get_typei() { return typei; }
@@ -151,22 +161,25 @@ namespace lwc {
 			ParseToken pt = ParseToken(tq.front());
 			tq.pop();
 			if (pt.tt == TokenType::op) { //When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
-				std::vector<LineNode*> temp;
-				for (int i = 0; i < 2; ++i) { //Operators always consume two tokens
-					temp.push_back(pds.top());
+				branches_t temp;
+				for (int i = 0; i < 2; ++i) {
+					master->push_back(pds.top());
+					temp.push_back(master->size()-1);
 					pds.pop();
 				}
 				std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-				pds.push(new LineNode(pt.opfunc, pt.rt, temp, pt.rval)); //create and push operator node with operand children
+				pds.push(new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval)); //create and push operator node with operand children
 			}
 			else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemented
-				std::vector<LineNode*> temp;
+				branches_t temp;
 				for (int i = 0; i < pt.argn; ++i) {
-					temp.push_back(pds.top());
+					master->push_back(pds.top());
+					temp.push_back(master->size()-1);
 					pds.pop();
+					
 				}
 				std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
-				LineNode* fln = new LineNode(pt.opfunc, pt.rt, temp, pt.rval);
+				LineNode* fln = new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval);
 				if (pt.brace_start) {
 					block_node = fln;
 					block_starts += 1;
@@ -177,15 +190,16 @@ namespace lwc {
 			else if (pt.tt == TokenType::elastic) {
 				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), scope);
 				LASTVariable* lvp = new LASTVariable(l.root);
-				// LASTVariable lv = *lvp; weirdly simply adding this line fixed a very bizarre implicit casting behavior. After I commented it out again, it was still fixed. Nothing else was changed before or after
+				// LASTVariable lv = *lvp; 
+				// weirdly simply adding the above line (uncommented) fixed a very bizarre implicit casting behavior. 
+				// After I commented it out again, it was still fixed. Nothing else was changed before or after. compiler bug? not sure how to reproduce
 				pds.push(new LineNode(lvp, pt.rt));
 				LineNode* lnpp = pds.top();
 			}
 			else {
 				variable v = convert_symbol(pt, scope);
 				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(scope[pt.val], pt.rt, pt.val)); //use mapped value for lvals (will be useful for garbage collection)
-				//std::cout << "uh oh\n";
-				//breadthwise.push_back(pds.top());
+				breadthwise.push_back(pds.top());
 			}
 		}
 		if (!pds.empty()) {
@@ -208,23 +222,23 @@ namespace lwc {
 		}
 	}
 
-	lwc::variable &evaluate_line(lwc::LineNode* const node) {
+	lwc::variable &evaluate_line(lwc::LineNode& const node) {
 
-		for (int i = 0; i < node->sz; ++i) {
-			if (node->get_branch(i)->is_leaf) {
-				node->arg_arr[i] = node->get_branch(i)->get_leaf();
+		for (int i = 0; i < node.sz; ++i) {
+			if (node.get_branch(i)->is_leaf) {
+				node.arg_arr[i] = node.get_branch(i)->get_leaf();
 			}
 			else {
-				node->arg_arr[i] = &evaluate_line(node->get_branch(i));
+				node.arg_arr[i] = &evaluate_line(*node.get_branch(i));
 			}
 		}
-		return node->func(node->arg_arr, node->rgstr, node->sz);
+		return node.func(node.arg_arr, node.rgstr, node.sz);
 	}
 
-	lwc::variable& evaluate_lines(block_func& lines) {
+	lwc::variable &evaluate_lines(block_func& lines) {
 		lwc::variable* var = nullptr;
-		for (LAST &line : lines) {
-			var = &evaluate_line(line.root);
+		for (int i = 0; i < lines.size(); ++i) {
+			var = &evaluate_line(*lines[i].root);
 		}
 		return *var;
 	}
@@ -248,6 +262,7 @@ namespace lwc {
 				bnodes.push(bnode);
 			}
 			else if (tq.brace_end) {
+				auto bbb = blockstack.top();
 				CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
 				blockstack.pop();
 				LineNode* ln = new LineNode(cbv, new TypeImpl<NumVar>);
