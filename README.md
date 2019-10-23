@@ -5,7 +5,7 @@ It is my second attempt at designing a scripting language. The first language wo
 
 At the time of writing the language currently has only assignment, arithmetic, loops, and conditional statements. Some features may need manual activation (check lwc_builtins.h and lwc_Parser.h) for the time being.
 
-It is 3.5 times faster than equivalent Python3 code when compiled with gcc. It is 50% faster than Python3 when compiled with MSVC.To compile with GCC, I recommend the following: `g++ main.cpp builtins.cpp typedefs.cpp lwc_Parser.cpp lwc_Lexing.cpp -o a.out -O3 -pthread`
+It is 3.5 times faster than equivalent Python3 code when compiled with gcc. It is 50% faster than Python3 when compiled with MSVC. To compile with GCC, I recommend the following: `g++ main.cpp builtins.cpp typedefs.cpp lwc_Parser.cpp lwc_Lexing.cpp -o a.out -O3 -pthread`
 
 I don't have an exact use case in mind, it really is more of a challenge for myself. It has maybe one cool feature so far, and that really is kind of a weird intregated macro system I guess.
 
