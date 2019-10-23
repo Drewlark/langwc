@@ -5,7 +5,7 @@ n2 =$ `(250*250)+(bi=1)`
 awe =$ `(250+5)+(1*10)`
 print(awe)
 
-x =$ `bi<3`
+x =$ `bi<1000000`
 n1 =$ `25*25`
 # easy multithreading
 
@@ -19,11 +19,11 @@ while(x){
  iter=0
  while(`iter<10`){
   a=c+b
-  print(iter, a, b, c)
+#  print(iter, a, b, c)
   c=b
   b=a
   iter+=1
  }
- print()
+# print()
  bi+=1
 }

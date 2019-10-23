@@ -102,14 +102,16 @@ namespace lwc {
 
 	typedef std::vector<unsigned int> branches_t;
 	typedef std::vector<LineNode*> master_lns;
+	typedef std::vector<bool> leaf_states_t;
 
 	class LineNode {
 		friend struct LAST;
 		branches_t branches;
 		master_lns * const master;
-		
 		static master_lns* LEAF_MASTER;
+		leaf_states_t leaf_states;
 	public:
+		
 		builtin_func func = nullptr;
 		std::vector<LAST> output_block;
 
@@ -128,6 +130,8 @@ namespace lwc {
 
 		void fit_args();
 		void fit_register();
+		void fit_leaf_states();
+		bool get_leaf_state(const int& i);
 
 		LineNode(master_lns *  _master, builtin_func _func, RegisterType* _rt, branches_t _branches = {}, bool rval = false);
 
@@ -219,7 +223,7 @@ namespace lwc {
 		block_func code_block;
 		static const RegisterType* typei;
 	public:
-		CodeBlockVariable(block_func& _code_block) : code_block(_code_block) {}
+		CodeBlockVariable(block_func& _code_block) : code_block(_code_block) { std::cout << "CBV created\n"; }
 		CodeBlockVariable() {}
 		long get();
 		void* get_vp(void*& reg) { *(long*)reg = this->get();  return reg; }

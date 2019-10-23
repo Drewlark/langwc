@@ -26,10 +26,24 @@ namespace lwc {
 		//}
 	}
 
+	void LineNode::fit_leaf_states()
+	{
+		leaf_states.clear();
+		for (int i = 0; i < sz; ++i) {
+			leaf_states.push_back(get_branch(i)->is_leaf);
+		}
+	}
+
+	bool LineNode::get_leaf_state(const int& i)
+	{
+		return leaf_states[i];
+	}
+
 	LineNode::LineNode(master_lns * _master, builtin_func _func, RegisterType* _rt, branches_t _branches, bool rval) : func(_func), rt(_rt), branches(_branches), is_rval(rval), master(_master)
 	{
 		fit_args();
 		fit_register();
+		fit_leaf_states()
 #ifdef _DEBUG
 		debug_set.push_back(*this);
 #endif
@@ -40,6 +54,7 @@ namespace lwc {
 		master->push_back(ln);
 		branches.push_back(master->size()-1);
 		fit_args();
+		fit_leaf_states();
 	}
 
 	LineNode* LineNode::get_branch(const int& index) {
@@ -155,22 +170,22 @@ namespace lwc {
 	}
 
 	LAST::LAST(std::queue<ParseToken> tq, Scope& scope) {
-		//Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
+		// Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
 		std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
 		while (!tq.empty()) {
 			ParseToken pt = ParseToken(tq.front());
 			tq.pop();
-			if (pt.tt == TokenType::op) { //When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
+			if (pt.tt == TokenType::op) { // When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
 				branches_t temp;
 				for (int i = 0; i < 2; ++i) {
 					master->push_back(pds.top());
 					temp.push_back(master->size()-1);
 					pds.pop();
 				}
-				std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
+				std::reverse(std::begin(temp), std::end(temp)); // vector must be reversed in order for the variables to be in the 'right' order
 				pds.push(new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval)); //create and push operator node with operand children
 			}
-			else if (pt.tt == TokenType::func) { //Function handling code is currently irrelevant as function declaration is not yet implemented
+			else if (pt.tt == TokenType::func) { // Function handling code is currently irrelevant as function declaration is not yet implemented
 				branches_t temp;
 				for (int i = 0; i < pt.argn; ++i) {
 					master->push_back(pds.top());
@@ -178,14 +193,14 @@ namespace lwc {
 					pds.pop();
 					
 				}
-				std::reverse(std::begin(temp), std::end(temp)); //vector must be reversed in order for the variables to be in the 'right' order
+				std::reverse(std::begin(temp), std::end(temp)); // vector must be reversed in order for the variables to be in the 'right' order
 				LineNode* fln = new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval);
 				if (pt.brace_start) {
 					block_node = fln;
 					block_starts += 1;
 				}
 
-				pds.push(fln); //create and push operator node with operand children
+				pds.push(fln); // create and push operator node with operand children
 			}
 			else if (pt.tt == TokenType::elastic) {
 				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), scope);
@@ -225,7 +240,7 @@ namespace lwc {
 	lwc::variable &evaluate_line(lwc::LineNode& node) {
 
 		for (int i = 0; i < node.sz; ++i) {
-			if (node.get_branch(i)->is_leaf) {
+			if (node.get_leaf_state(i)) {
 				node.arg_arr[i] = node.get_branch(i)->get_leaf();
 			}
 			else {
