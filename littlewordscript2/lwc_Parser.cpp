@@ -39,7 +39,7 @@ namespace lwc {
 		return leaf_states[i];
 	}
 
-	LineNode::LineNode(master_lns * _master, builtin_func _func, RegisterType* _rt, branches_t _branches, bool rval) : func(_func), rt(_rt), branches(_branches), is_rval(rval), master(_master)
+	LineNode::LineNode(std::shared_ptr<master_lns> _master, builtin_func _func, RegisterType* _rt, branches_t _branches, bool rval) : func(_func), rt(_rt), branches(_branches), is_rval(rval), master(_master)
 	{
 		fit_args();
 		fit_register();
@@ -58,10 +58,11 @@ namespace lwc {
 	}
 
 	LineNode* LineNode::get_branch(const int& index) {
-		return (*master)[branches[index]];
+		// TODO rather than access branches from master at run-time, allow for initialization step that simply creates vector of branches directly to linenodes. Would also need custom copy constructor
+		return (*master)[branches[index]]; 
 	}
  
-	Scope global; //HACK: eventually pass through global scope
+	Scope global; // HACK eventually pass through global scope, rather than using a global variable
 
 	const static TypeImpl<LASTVariable> LAST_TYPEI;
 	const static TypeImpl<CodeBlockVariable> CB_TYPEI;

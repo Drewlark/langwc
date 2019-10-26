@@ -107,7 +107,7 @@ namespace lwc {
 	class LineNode {
 		friend struct LAST;
 		branches_t branches;
-		master_lns * const master;
+		std::shared_ptr<master_lns> const master;
 		static master_lns* LEAF_MASTER;
 		leaf_states_t leaf_states;
 	public:
@@ -133,7 +133,7 @@ namespace lwc {
 		void fit_leaf_states();
 		bool get_leaf_state(const int& i);
 
-		LineNode(master_lns *  _master, builtin_func _func, RegisterType* _rt, branches_t _branches = {}, bool rval = false);
+		LineNode(std::shared_ptr<master_lns> _master, builtin_func _func, RegisterType* _rt, branches_t _branches = {}, bool rval = false);
 
 		LineNode(variable _var, RegisterType* _rt) : var(_var), rt(_rt), master(LEAF_MASTER) { is_leaf = true;}
 		LineNode(variable* _lvar, RegisterType* _rt, std::string _name) : lvar(_lvar), rt(_rt), name(_name), master(LEAF_MASTER) { is_leaf = true; is_rval = false;}
@@ -150,7 +150,7 @@ namespace lwc {
 	class Scope;
 
 	struct LAST { //"Line" abstract syntax tree
-		master_lns* master = new master_lns(); // TODO safe deletion of these.. can be tricky. shared ptr necessary?
+		std::shared_ptr<master_lns> master = std::make_shared<master_lns>(); // TODO safe deletion of these.. can be tricky. shared ptr necessary?
 		LineNode* root = nullptr;
 		uint8_t block_ends = 0;
 		uint8_t block_starts = 0;
@@ -159,11 +159,13 @@ namespace lwc {
 		void rebuild();
 		LAST(std::queue<ParseToken> tq, Scope& scope);
 		//LAST(const LAST&);
+#if defined(_DEBUG) || defined(SHOW_LAST_DEL)		
 		~LAST() {
-#if defined(_DEBUG) || defined(SHOW_LAST_DEL)
+
 			std::cout << "LAST destroyed with default destructor\n";
-#endif
+
 		}
+#endif
 	};
 	typedef std::vector<LAST> block_func;
 
