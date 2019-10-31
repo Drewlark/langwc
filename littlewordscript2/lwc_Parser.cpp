@@ -84,9 +84,9 @@ namespace lwc {
 	}
 	RegisterType const* const LASTVariable::get_typei() { return typei; }
 
-	std::queue<ParseToken> shunting_yard(TokenQueue tq) //Adapted Shunting-Yard algorithm. output is the output queue
+	TokenQueue shunting_yard(TokenQueue tq) //Adapted Shunting-Yard algorithm. output is the output queue
 	{
-		std::queue<ParseToken> out_q; //output queue
+		TokenQueue out_q(tq.brace_end); //output queue
 		std::stack<ParseToken> op_stk; //operator stack
 
 		while (!tq.empty()) {
@@ -170,7 +170,7 @@ namespace lwc {
 		}
 	}
 
-	LAST::LAST(std::queue<ParseToken> tq, Scope& scope) {
+	LAST::LAST(TokenQueue tq, Scope& scope) {
 		// Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
 		std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
 		while (!tq.empty()) {
@@ -226,6 +226,13 @@ namespace lwc {
 #endif // _DEBUG
 	}
 
+	/*LAST::LAST(const LAST& last2)
+	{
+		for (auto lnp : *last2.master) {
+			master->emplace_back(new LineNode(lnp))
+		}
+	}*/
+
 
 	// Instead of using hashing every function call, scope could return two ids which
 	//		would point to pointers on an array held by Scope
@@ -251,7 +258,7 @@ namespace lwc {
 		return node.func(node.arg_arr, node.rgstr, node.sz);
 	}
 
-	lwc::variable &evaluate_lines(block_func& lines) {
+	lwc::variable &evaluate_lines(CodeBlock& lines) {
 		lwc::variable* var = nullptr;
 		for (int i = 0; i < lines.size(); ++i) {
 			var = &evaluate_line(*lines[i].root);
@@ -259,25 +266,48 @@ namespace lwc {
 		return *var;
 	}
 
-	block_func parse_from_slines(std::vector<std::string> slines) {
-		std::stack<block_func> blockstack;
+	CodeBlock parse_from_slines(std::vector<std::string> slines) {
+		std::stack<CodeBlock> blockstack;
 		std::stack<LineNode*> bnodes;
-		block_func main_scope;
+		CodeBlock main_scope;
 		blockstack.push(main_scope);
 		for (std::string sline : slines) {
 			TokenQueue tq(sline);
 			LineNode* bnode = nullptr;
 			if (!tq.empty()) {
-				LAST temp_last(shunting_yard(tq), global);
-				blockstack.top().push_back(temp_last);
-
-				bnode = temp_last.block_node;
+				blockstack.top().emplace_back(shunting_yard(tq), global);
+				bnode = blockstack.top().back().block_node;
 			}
 			if (bnode) {
 				blockstack.emplace();
 				bnodes.push(bnode);
 			}
 			else if (tq.brace_end) {
+				auto bbb = blockstack.top();
+				CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
+				blockstack.pop();
+				LineNode* ln = new LineNode(cbv, new TypeImpl<NumVar>);
+				bnodes.top()->add_branch(ln);
+				bnodes.pop();
+			}
+		}
+		return blockstack.top();
+	}
+
+	CodeBlock parse_from_tq(std::vector<TokenQueue> lines_vec) { // parse tokenqueue that has been preprocessed with TokenQueue and shunting_yard
+		std::stack<CodeBlock> blockstack;
+		std::stack<LineNode*> bnodes;
+		for (auto line : lines_vec) {
+			LineNode* bnode = nullptr;
+			if (!line.empty()) {
+				blockstack.top().emplace_back(line, global);
+				bnode = blockstack.top().back().block_node;
+			}
+			if (bnode) {
+				blockstack.emplace();
+				bnodes.push(bnode);
+			}
+			else if (line.brace_end) {
 				auto bbb = blockstack.top();
 				CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
 				blockstack.pop();

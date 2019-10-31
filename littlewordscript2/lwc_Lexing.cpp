@@ -70,6 +70,9 @@ namespace lwc {
 		std::string temp = "";
 		QState qs = QState::def;
 		for (char c : s) {
+			if (c == '#') {
+				return;
+			}
 			bool parens_checked = false;
 			bool tc_appended = false;
 			if (qs == QState::op) {

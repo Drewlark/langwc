@@ -28,13 +28,11 @@ int main(int argc, char* argv[])
 	if (fs.good()) {
 		std::string line;
 		while (std::getline(fs, line)) {
-			remove_whitespace(line); //temporary solution. Lexer will have to handle this in future.
-			if (line.size() > 0 && line[0] != '#')
-				words.push_back(line);
+			words.push_back(line);
 		}
 		fs.flush();
 		std::unordered_map<std::string, lwc::variable> my_varmap;
-		lwc::block_func root_scope(lwc::parse_from_slines(words));
+		lwc::CodeBlock root_scope(lwc::parse_from_slines(words));
 		std::cout << "build complete" << std::endl;
 
 		auto start_eval = std::chrono::high_resolution_clock::now();

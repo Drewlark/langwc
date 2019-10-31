@@ -92,8 +92,12 @@ namespace lwc {
 		bool checkparens(std::string& tmp, char& c, QState& qs, bool& pcheck);
 	public:
 		bool brace_end = false;
+		TokenQueue(bool _brace_end) : brace_end(_brace_end) {}
 		TokenQueue(std::string s);
 		ParseToken pop();
+		void push(ParseToken pt) { data.push_back(pt); }
+		ParseToken& front() { return data.front(); }
+		void clear() { data.clear(); }
 		bool empty();
 	};
 
@@ -150,16 +154,16 @@ namespace lwc {
 	class Scope;
 
 	struct LAST { //"Line" abstract syntax tree
-		std::shared_ptr<master_lns> master = std::make_shared<master_lns>(); // TODO safe deletion of these.. can be tricky. shared ptr necessary?
+		std::shared_ptr<master_lns> master = std::make_shared<master_lns>();
 		LineNode* root = nullptr;
 		uint8_t block_ends = 0;
 		uint8_t block_starts = 0;
 		LineNode* block_node = nullptr;
 		std::vector<LineNode*> breadthwise;
 		void rebuild();
-		LAST(std::queue<ParseToken> tq, Scope& scope);
-		//LAST(const LAST&);
-#if defined(_DEBUG) || defined(SHOW_LAST_DEL)		
+		LAST(TokenQueue tq, Scope& scope);
+		//LAST(const LAST& last2);
+#if defined(SHOW_LAST_DEL)		
 		~LAST() {
 
 			std::cout << "LAST destroyed with default destructor\n";
@@ -167,7 +171,7 @@ namespace lwc {
 		}
 #endif
 	};
-	typedef std::vector<LAST> block_func;
+	typedef std::vector<LAST> CodeBlock;
 
 	class Scope {
 		std::unordered_map<std::string, variable> names;
@@ -222,10 +226,10 @@ namespace lwc {
 
 	class CodeBlockVariable : public BaseVariable //variable wrapping a vector of type LAST
 	{
-		block_func code_block;
+		CodeBlock code_block;
 		static const RegisterType* typei;
 	public:
-		CodeBlockVariable(block_func& _code_block) : code_block(_code_block) { std::cout << "CBV created\n"; }
+		CodeBlockVariable(CodeBlock& _code_block) : code_block(_code_block) { std::cout << "CBV created\n"; }
 		CodeBlockVariable() {}
 		long get();
 		void* get_vp(void*& reg) { *(long*)reg = this->get();  return reg; }

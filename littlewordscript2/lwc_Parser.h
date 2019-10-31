@@ -10,7 +10,7 @@ namespace lwc {
 	static const set<char> reserved_chars = { '+', '*', '-', '/', '=', '<', '>', '$', ';' };
 
 	static const std::unordered_map<std::string, OperatorIdentity> op_ids = {
-		{"+", OperatorIdentity(builtin_func(lwc::add), false, 0, true, new TypeImpl<NumVar>(), "ADD")}, //HACK temporary solution to statically define return types.
+		{"+", OperatorIdentity(builtin_func(lwc::add), false, 0, true, new TypeImpl<NumVar>(), "ADD")}, // HACK temporary solution to statically define return types.
 		{"*", OperatorIdentity(builtin_func(lwc::mult), false , 1, true, new TypeImpl<NumVar>(), "MULT")},
 		{"-", OperatorIdentity(builtin_func(lwc::sub), true, 0, true, new TypeImpl<NumVar>(), "SUB")},
 		{"/", OperatorIdentity(builtin_func(lwc::div), true, 1, true, new TypeImpl<NumVar>(), "DIV")},
@@ -35,14 +35,16 @@ namespace lwc {
 
 	//lwc::variable evaluate_line(lwc::LineNode* node);
 
-	std::queue<ParseToken> shunting_yard(TokenQueue tq); //Adapted Shunting-Yard algorithm. returns the output queue
+	TokenQueue shunting_yard(TokenQueue tq); //Adapted Shunting-Yard algorithm. returns the output queue
 
 	lwc::variable convert_symbol(const ParseToken& pt, Scope& scope);
 
 	lwc::variable &evaluate_line(lwc::LineNode& node);
 
-	lwc::variable &evaluate_lines(block_func &lines);
+	lwc::variable &evaluate_lines(CodeBlock &lines);
 
-	block_func parse_from_slines(std::vector<std::string> slines);
+	CodeBlock parse_from_slines(std::vector<std::string> slines);
+
+	CodeBlock parse_from_tq(std::vector<TokenQueue>);
 }
 #endif
