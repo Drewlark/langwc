@@ -8,5 +8,3 @@ At the time of writing the language currently has only assignment, arithmetic, l
 It is 3.5 times faster than equivalent Python3 code when compiled with gcc. It is 50% faster than Python3 when compiled with MSVC. To compile with GCC, I recommend the following: `g++ main.cpp builtins.cpp typedefs.cpp lwc_Parser.cpp lwc_Lexing.cpp -o a.out -O3 -pthread`
 
 I don't have an exact use case in mind, it really is more of a challenge for myself. It has maybe one cool feature so far, and that really is kind of a weird intregated macro system I guess.
-
-Oh, and currently there is only **some garbage collection - good enough for now... but not perfect**, that is next on my agenda however.
