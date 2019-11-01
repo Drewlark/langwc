@@ -6,64 +6,67 @@
 
 namespace lwc {
 
+
+
 	long get_from_var(variable* var) {
 		return (*var)->get();
 	}
 
-	variable& add(variable** vars, variable& reg, const int& argc) {
+	builtin_header(add) {
 		NumVar nv((*vars[0])->get() + (*vars[1])->get());
 		*reg = nv;
 		return reg;
 	}
 
-	variable& sub(variable** vars, variable& reg, const int& argc) {
+	builtin_header(sub) {
 		NumVar nv((*vars[0])->get() - (*vars[1])->get());
 		*reg = nv;
 		return reg;
 	}
 
-	variable& mult(variable** vars, variable& reg, const int& argc) {
+	builtin_header(mult) {
 		NumVar nv((*vars[0])->get() * (*vars[1])->get());
 		*reg = nv;
 		return reg;
 	}
 
-	variable& div(variable** vars, variable& reg, const int& argc) {
+	builtin_header(div) {
 		NumVar nv((*vars[0])->get() / (*vars[1])->get());
 		*reg = nv;
 		return reg;
 	}
 
-	variable& while_loop(variable** vars, variable& reg, const int& argc) {
+	builtin_header(while_loop) {
 		while ((*vars[0])->get()) {
 			(*vars[1])->get();
 		}
 		return *vars[0];
 	}
 
-	variable& assign(variable** vars, variable& reg, const int& argc) {
+	builtin_header(assign) {
 		**vars[0] = **vars[1];
 		return *vars[1];
 	}
 
-	variable& refassign(variable** vars, variable& reg, const int& argc) {
+	builtin_header(refassign) {
+		free(*vars[0]);
 		*vars[0] = *vars[1];
 		return *vars[1];
 	}
 
-	variable& is_lessthan(variable** vars, variable& reg, const int& argc) {
+	builtin_header(is_lessthan) {
 		NumVar nv((*vars[0])->get() < (*vars[1])->get());
 		*reg = nv;
 		return reg;
 	}
 
-	variable& is_greaterthan(variable** vars, variable& reg, const int& argc) {
+	builtin_header(is_greaterthan) {
 		NumVar nv((*vars[0])->get() > (*vars[1])->get());
 		*reg = nv;
 		return reg;
 	}
 
-	variable& print(variable** vars, variable& reg, const int& argc) {
+	builtin_header(print) {
 		for (int i = 0; i < argc; i++) {
 			std::cout << (*vars[i])->get() << " ";
 		}
@@ -71,35 +74,37 @@ namespace lwc {
 		return reg;
 	}
 
-	variable& incrementby(lwc::variable** vars, variable& reg, const int& argc) {
+	builtin_header(incrementby) {
 		NumVar nv((*vars[0])->get() + (*vars[1])->get());
 		**vars[0] = nv;
 		return reg;
 	}
 
-	variable& scast(lwc::variable** vars, variable& reg, const int& argc) {
+	builtin_header(scast) {
 		*vars[0] = (LASTVariable*)(*vars[1]);
 		return *vars[0];
 	}
 
-	variable& it_elast(variable** vars, variable& reg, const int& argc)
+	builtin_header(it_elast)
 	{
+		free(*vars[0]);
 		*vars[0] = (LASTVariable*)(*vars[1]);
 		return *vars[0];
 	}
-	variable& bad_name(variable** vars, variable& reg, const int& argc)
+
+	builtin_header(bad_name)
 	{
 		std::cout << "A bad name was used somewhere in your code." << std::endl;
 		exit(lwc::BAD_NAME_INTERNAL_ERR);
 	}
 	
-	variable& nihil(variable** vars, variable& reg, const int& argc)
+	builtin_header(nihil)
 	{
 		//std::cout << *vars[0] << " " << *vars[1];
 		return reg;
 	}
 	
-	variable& sexecute(variable** vars, variable& reg, const int& argc)
+	builtin_header(sexecute)
 	{
 		if (argc == 1) {
 			NumVar nv((*vars[0])->get());

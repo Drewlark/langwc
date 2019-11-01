@@ -69,3 +69,7 @@ It appears that there is some bug-related limit whereby operator lengths greater
 
 Lots of bugs in Lexer. Particularly when it comes to operators. Nested functions appear broken to some extent. 
 This is next before enduser functions
+
+Lexer bugs are finished.
+
+End user functions are close.

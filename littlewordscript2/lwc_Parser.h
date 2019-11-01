@@ -20,7 +20,7 @@ namespace lwc {
 		{"+=", OperatorIdentity(builtin_func(lwc::incrementby), false, -2, true, new TypeImpl<NumVar>(), "INCR")},
 		{"=>", OperatorIdentity(builtin_func(lwc::refassign), false , -2, true, new TypeImpl<NumVar>(), "RAS")},
 		{"$", OperatorIdentity(builtin_func(lwc::bad_name), false, -2, true, new TypeImpl<NumVar>(), "BN")},
-		{"=$", OperatorIdentity(builtin_func(lwc::it_elast), false, -2, true, new TypeImpl<LASTVariable>, "I_E")},
+		{"=$", OperatorIdentity(builtin_func(lwc::it_elast), false, -2, true, new TypeImpl<LASTVariable>, "ELAS")},
 		{";", OperatorIdentity(builtin_func(lwc::nihil), false, -99, true, new TypeImpl<NumVar>(), "NHL")},
 	};
 

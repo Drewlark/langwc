@@ -8,7 +8,9 @@
 #include <unordered_map>
 #include <type_traits> // For ensuring certain templated functions only use template classes deriving from BaseVariable (defined in lwc_prims.h)
 #include <iostream>
+#include <set>
 #include "lwc_prims.h"
+#include "lwc_Lexing.h"
 #ifndef LWC_TYPEDEF
 #define LWC_TYPEDEF
 
@@ -69,6 +71,7 @@ namespace lwc {
 		int argn = 0;
 		bool rval = false;
 		RegisterType* rt = nullptr;
+		std::set<lwc::Keywords> keywords;
 
 		ParseToken(std::string _val, TokenType _tt, RegisterType* _rt, int _precedence = 0, bool _leftassoc = 0, bool _rval = false);
 		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt), val(oid.debug_name) {}; //No value is possible here because the string value is irrelevant to an op
@@ -86,6 +89,7 @@ namespace lwc {
 		enum class QState { def, op, num, elastic };
 		std::deque<lwc::ParseToken> data;
 		std::stack<lwc::ParseToken*> func_stack;
+		std::deque<lwc::Keywords> keyword_queue;
 		int paren_depth = 0;
 		void check_for_argness(); //Checks if func stack is not empty, and then increments argn for that func if not. Only call this when var-like token is found.
 		void add_unknown(std::string& unk, QState& qs);
@@ -95,6 +99,7 @@ namespace lwc {
 		TokenQueue(bool _brace_end) : brace_end(_brace_end) {}
 		TokenQueue(std::string s);
 		ParseToken pop();
+		void void_pop() { data.pop_front();}
 		void push(ParseToken pt) { data.push_back(pt); }
 		ParseToken& front() { return data.front(); }
 		void clear() { data.clear(); }
@@ -115,13 +120,14 @@ namespace lwc {
 		static master_lns* LEAF_MASTER;
 		leaf_states_t leaf_states;
 	public:
-		
 		builtin_func func = nullptr;
 		std::vector<LAST> output_block;
 
 		bool is_rval = true;
-		variable var = nullptr;
-		variable* lvar = nullptr;
+		union {
+			variable var = nullptr;
+			variable* lvar;
+		} data;
 		bool is_leaf = false;
 		std::string name; // important for debugging
 
@@ -139,14 +145,14 @@ namespace lwc {
 
 		LineNode(std::shared_ptr<master_lns> _master, builtin_func _func, RegisterType* _rt, branches_t _branches = {}, bool rval = false);
 
-		LineNode(variable _var, RegisterType* _rt) : var(_var), rt(_rt), master(LEAF_MASTER) { is_leaf = true;}
-		LineNode(variable* _lvar, RegisterType* _rt, std::string _name) : lvar(_lvar), rt(_rt), name(_name), master(LEAF_MASTER) { is_leaf = true; is_rval = false;}
+		LineNode(variable _var, RegisterType* _rt) :rt(_rt), master(LEAF_MASTER) { data.var = _var; is_leaf = true; }
+		LineNode(variable* _lvar, RegisterType* _rt, std::string _name) : rt(_rt), name(_name), master(LEAF_MASTER) { data.lvar = _lvar; is_leaf = true; is_rval = false; }
 		LineNode() : master(LEAF_MASTER) { is_leaf = true;}
 		~LineNode() { delete[] arg_arr;}
 
 		void add_branch(LineNode* ln);
 
-		variable* get_leaf() {return is_rval ? &var : lvar;}
+		variable* get_leaf() {return is_rval ? &data.var : data.lvar;}
 
 		LineNode* get_branch(const int& index);
 	};

@@ -12,39 +12,26 @@ using namespace std;
 
 namespace lwc {
 
+	#define builtin_header(FUNC_NAME) variable& FUNC_NAME (variable** vars, variable& reg, const int& argc)
+
 	//variable mk_num_var() {};
 
-	variable& add(variable** vars, variable& reg, const int& argc);
-
-	variable& sub(variable** vars, variable& reg, const int& argc);
-
-	variable& mult(variable** vars, variable& reg, const int& argc);
-
-	variable& div(variable** vars, variable& reg, const int& argc);
-
-	variable& while_loop(variable** vars, variable& reg, const int& argc);
-
-	variable& assign(variable** vars, variable& reg, const int& argc);
-
-	variable& refassign(variable** vars, variable& reg, const int& argc);
-
-	variable& is_lessthan(variable** vars, variable& reg, const int& argc);
-
-	variable& is_greaterthan(variable** vars, variable& reg, const int& argc);
-
-	variable& print(variable** vars, variable& reg, const int& argc);
-
-	variable& incrementby(variable** vars, variable& reg, const int& argc);
-
-	variable& scast(variable** vars, variable& reg, const int& argc);
-
-	variable& it_elast(variable** vars, variable& reg, const int& argc);
-
-	variable& bad_name(variable** vars, variable& reg, const int& argc);
-
-	variable& nihil(variable** vars, variable& reg, const int& argc);
-
-	variable& sexecute(variable** vars, variable& reg, const int& argc);
+	builtin_header(add);
+	builtin_header(sub);
+	builtin_header(mult);
+	builtin_header(div);
+	builtin_header(while_loop);
+	builtin_header(assign);
+	builtin_header(refassign);
+	builtin_header(is_lessthan);
+	builtin_header(is_greaterthan);
+	builtin_header(print);
+	builtin_header(incrementby);
+	builtin_header(scast);
+	builtin_header(it_elast);
+	builtin_header(bad_name);
+	builtin_header(nihil);
+	builtin_header(sexecute);
 
 
 	

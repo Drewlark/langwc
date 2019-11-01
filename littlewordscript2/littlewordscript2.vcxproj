@@ -122,6 +122,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="lwc_Lexing.h" />
     <ClInclude Include="lwc_builtins.h" />
     <ClInclude Include="lwc_err_codes.h" />
     <ClInclude Include="lwc_prims.h" />

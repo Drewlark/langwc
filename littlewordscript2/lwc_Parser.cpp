@@ -43,11 +43,12 @@ namespace lwc {
 	{
 		fit_args();
 		fit_register();
-		fit_leaf_states()
+		fit_leaf_states();
 #ifdef _DEBUG
 		debug_set.push_back(*this);
-#endif
 		;;
+#endif
+		
 	}
 
 	void LineNode::add_branch(LineNode* ln) {
@@ -165,7 +166,12 @@ namespace lwc {
 			return new NumVar(long(stol(pt.val)));
 		}
 		else {
-			scope.handle_name(pt.val);
+			if (pt.keywords.count(Keywords::ELAST)) {
+				scope.handle_name<lwc::LASTVariable>(pt.val);
+			}
+			else {
+				scope.handle_name(pt.val);
+			}
 			return nullptr;
 		}
 	}
@@ -174,8 +180,8 @@ namespace lwc {
 		// Turn a Shunting-Yard output queue into a tree of tokens. This is needed to actually evaluate the expression
 		std::stack<LineNode*> pds; //any nodes not yet childed to an operator are pushed here
 		while (!tq.empty()) {
-			ParseToken pt = ParseToken(tq.front());
-			tq.pop();
+			ParseToken pt(tq.front());
+			tq.void_pop();
 			if (pt.tt == TokenType::op) { // When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
 				branches_t temp;
 				for (int i = 0; i < 2; ++i) {
@@ -221,7 +227,7 @@ namespace lwc {
 		if (!pds.empty()) {
 			root = pds.top(); //remaining node is the root
 		}
-#ifdef _DEBUG
+#ifdef PRINT_LVAL_INFO
 		rebuild();
 #endif // _DEBUG
 	}
@@ -240,7 +246,7 @@ namespace lwc {
 		for (LineNode* &lnp : breadthwise) {
 			//std::cout << "bw" << lnp->is_leaf << std::endl;
 			if (!(lnp->is_rval)) {
-				std::cout << "LVAL_INFO " << sizeof(lnp) << " " <<lnp->name << " " << lnp->lvar << std::endl;
+				std::cout << "LVAL_INFO " << sizeof(lnp) << " " <<lnp->name << " " << lnp->data.lvar<< std::endl;
 			}
 		}
 	}

@@ -1,5 +1,9 @@
 #include <sstream>
 #include <string>
+
+// Debug definitions
+// #define PRINT_LVAL_INFO
+
 #ifndef H_LWC_PRIMS
 #define H_LWC_PRIMS
 namespace lwc {
