@@ -4,7 +4,7 @@
 #define H_LWC_LEXER
 
 namespace lwc{
-	static enum class Keywords {INT, ELAST, FUNC};
+	enum class Keywords {INT, ELAST, FUNC};
 	static const std::unordered_map<std::string, Keywords> KEYWORD_STRINGS = {
 		{"int", Keywords::INT}, {"elast", Keywords::ELAST}, {"func", Keywords::FUNC}
 	};
