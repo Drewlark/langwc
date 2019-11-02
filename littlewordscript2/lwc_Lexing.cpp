@@ -21,7 +21,7 @@ namespace lwc {
 
 	void TokenQueue::add_unknown(std::string& unk, QState& qs) {
 		//std::cout << "unk: " << unk << endl;
-		if (unk.length() > 0) {
+		if (!unk.empty()) {
 			if (KEYWORD_STRINGS.count(unk)) {
 				keyword_queue.push_back(KEYWORD_STRINGS.at(unk));
 			}
@@ -36,9 +36,11 @@ namespace lwc {
 					}
 				}
 			}
+			std::cout << unk << ' ' << unk.empty() << "\n";
 			qs = QState::def;
 			unk.clear();
 			check_for_argness();
+			
 		}
 	}
 
@@ -52,7 +54,8 @@ namespace lwc {
 				data.emplace_back(std::string(1, c), TokenType::rparen, nullptr);
 				ret = true;
 				--paren_depth;
-				if (paren_depth == 0 && !func_stack.empty()) {
+				
+				if (!func_stack.empty()) {
 					func_stack.pop();
 					check_for_argness();
 				}
