@@ -9,7 +9,7 @@ elast x => `bi<1000000`
 elast n1 => `25*25`
 # easy multithreading
 
-pxnor(n1, n2)
+pxnor(n1, n2) #elasts are run concurrently. return value is xnor of them (placeholder for array)
 
 # fibonacci sequence calculator
 while(x){

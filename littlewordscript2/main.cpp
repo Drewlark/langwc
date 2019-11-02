@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
 			words.push_back(line);
 		}
 		fs.flush();
+		fs.close();
 		std::unordered_map<std::string, lwc::variable> my_varmap;
 		lwc::CodeBlock root_scope(lwc::parse_from_slines(words));
 		std::cout << "build complete" << std::endl;

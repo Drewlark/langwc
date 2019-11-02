@@ -15,7 +15,7 @@ namespace lwc {
 	
 	void TokenQueue::check_for_argness() {
 		if (!func_stack.empty()) {
-			++func_stack.top()->argn;
+			++func_stack.top().first.argn;
 		}
 	}
 
@@ -36,7 +36,6 @@ namespace lwc {
 					}
 				}
 			}
-			std::cout << unk << ' ' << unk.empty() << "\n";
 			qs = QState::def;
 			unk.clear();
 			check_for_argness();
@@ -55,7 +54,7 @@ namespace lwc {
 				ret = true;
 				--paren_depth;
 				
-				if (!func_stack.empty()) {
+				if (!func_stack.empty() && func_stack.top().second == paren_depth) {
 					func_stack.pop();
 					check_for_argness();
 				}
@@ -64,7 +63,7 @@ namespace lwc {
 			else if (c == '(') {
 				if (!tmp.empty() && !op_ids.count(tmp)) {
 					data.push_back(ParseToken(tmp, TokenType::func, func_ids[tmp].rt));
-					func_stack.push(&data.back());
+					func_stack.push({ data.back(), paren_depth });
 					tmp.clear();
 				}
 				++paren_depth;
@@ -105,7 +104,7 @@ namespace lwc {
 					qs = QState::def;
 					temp.clear();
 					if (!func_stack.empty()) {
-						++func_stack.top()->argn;
+						++func_stack.top().first.argn;
 					}
 				}
 				else {

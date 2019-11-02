@@ -88,7 +88,7 @@ namespace lwc {
 	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
 		enum class QState { def, op, num, elastic };
 		std::deque<lwc::ParseToken> data;
-		std::stack<lwc::ParseToken*> func_stack;
+		std::stack<std::pair<lwc::ParseToken&, int>> func_stack;
 		std::deque<lwc::Keywords> keyword_queue;
 		int paren_depth = 0;
 		void check_for_argness(); //Checks if func stack is not empty, and then increments argn for that func if not. Only call this when var-like token is found.
