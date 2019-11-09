@@ -21,8 +21,8 @@ namespace lwc {
 
 	void LineNode::fit_register() {
 		//if (!this->is_leaf) {
-			BaseVariable* tempbv = (BaseVariable*)rt->allocate();
-			rgstr = variable(tempbv);
+		BaseVariable* tempbv = (BaseVariable*)rt->allocate();
+		rgstr = variable(tempbv);
 		//}
 	}
 
@@ -34,7 +34,7 @@ namespace lwc {
 		}
 	}
 
-	bool LineNode::get_leaf_state(const int& i)
+	inline bool LineNode::get_leaf_state(const int& i)
 	{
 		return leaf_states[i];
 	}
@@ -48,22 +48,20 @@ namespace lwc {
 		debug_set.push_back(*this);
 		;;
 #endif
-		
+
 	}
 
 	void LineNode::add_branch(LineNode* ln) {
 		master->push_back(ln);
-		branches.push_back(master->size()-1);
+		branches.push_back(master->size() - 1);
 		fit_args();
 		fit_leaf_states();
 	}
 
 	LineNode* LineNode::get_branch(const int& index) {
 		// TODO rather than access branches from master at run-time, allow for initialization step that simply creates vector of branches directly to linenodes. Would also need custom copy constructor
-		return (*master)[branches[index]]; 
+		return (*master)[branches[index]];
 	}
- 
-	Scope global; // HACK eventually pass through global scope, rather than using a global variable
 
 	const static TypeImpl<LASTVariable> LAST_TYPEI;
 	const static TypeImpl<CodeBlockVariable> CB_TYPEI;
@@ -94,45 +92,45 @@ namespace lwc {
 			ParseToken pt = tq.pop();
 			switch (pt.tt) {
 
-			case TokenType::num:
+			case TokenType::NUM:
 				out_q.push(pt);
 				break;
-			case TokenType::name:
+			case TokenType::NAME:
 				out_q.push(pt);
 				break;
-			case TokenType::elastic:
+			case TokenType::ELASTIC:
 				out_q.push(pt);
 				break;
-			case TokenType::func:
+			case TokenType::CALL:
 				op_stk.push(pt);
 				break;
-			case TokenType::op:
-				while (!op_stk.empty() && ((op_stk.top().tt == TokenType::op) &&
+			case TokenType::OP:
+				while (!op_stk.empty() && ((op_stk.top().tt == TokenType::OP) &&
 					(op_stk.top() > pt || (op_stk.top().precedence == pt.precedence && pt.leftassoc)))) {
 					out_q.push(op_stk.top());
 					op_stk.pop();
 				}
 				op_stk.push(pt);
 				break;
-			case TokenType::comma:
-				while (op_stk.top().tt != TokenType::lparen) {
+			case TokenType::COMMA:
+				while (op_stk.top().tt != TokenType::LPAREN) {
 					out_q.push(op_stk.top());
 					op_stk.pop();
 				}
 				break;
-			case TokenType::lparen:
+			case TokenType::LPAREN:
 				op_stk.push(pt);
 				break;
 
-			case TokenType::rparen:
-				while (op_stk.top().tt != TokenType::lparen) {
+			case TokenType::RPAREN:
+				while (op_stk.top().tt != TokenType::LPAREN) {
 					out_q.push(op_stk.top());
 					op_stk.pop();
 				}
-				if (op_stk.top().tt == TokenType::lparen) {
+				if (op_stk.top().tt == TokenType::LPAREN) {
 					op_stk.pop();
 				}
-				if (!op_stk.empty() && op_stk.top().tt == TokenType::func) {
+				if (!op_stk.empty() && op_stk.top().tt == TokenType::CALL) {
 					op_stk.top().brace_start = pt.brace_start;
 					out_q.push(op_stk.top());
 					op_stk.pop();
@@ -162,16 +160,11 @@ namespace lwc {
 	}
 
 	lwc::variable convert_symbol(const ParseToken& pt, Scope& scope) {
-		if (pt.tt == TokenType::num) {
+		if (pt.tt == TokenType::NUM) {
 			return new NumVar(long(stol(pt.val)));
 		}
 		else {
-			if (pt.keywords.count(Keywords::ELAST)) {
-				scope.handle_name<lwc::LASTVariable>(pt.val);
-			}
-			else {
-				scope.handle_name(pt.val);
-			}
+			scope.handle_generic_token(pt);
 			return nullptr;
 		}
 	}
@@ -182,45 +175,48 @@ namespace lwc {
 		while (!tq.empty()) {
 			ParseToken pt(tq.front());
 			tq.void_pop();
-			if (pt.tt == TokenType::op) { // When we find an operator we must pop n tokens off of pds. n=amount of operands required by given operator or function
+			if (pt.tt == TokenType::OP) {
 				branches_t temp;
 				for (int i = 0; i < 2; ++i) {
 					master->push_back(pds.top());
-					temp.push_back(master->size()-1);
+					temp.push_back(master->size() - 1);
 					pds.pop();
 				}
-				std::reverse(std::begin(temp), std::end(temp)); // vector must be reversed in order for the variables to be in the 'right' order
-				pds.push(new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval)); //create and push operator node with operand children
+				std::reverse(std::begin(temp), std::end(temp));
+				pds.push(new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval));
 			}
-			else if (pt.tt == TokenType::func) { // Function handling code is currently irrelevant as function declaration is not yet implemented
+			else if (pt.tt == TokenType::CALL) {
 				branches_t temp;
 				for (int i = 0; i < pt.argn; ++i) {
 					master->push_back(pds.top());
-					temp.push_back(master->size()-1);
+					temp.push_back(master->size() - 1);
 					pds.pop();
-					
+
 				}
-				std::reverse(std::begin(temp), std::end(temp)); // vector must be reversed in order for the variables to be in the 'right' order
+				std::reverse(std::begin(temp), std::end(temp));
 				LineNode* fln = new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval);
 				if (pt.brace_start) {
 					block_node = fln;
 					block_starts += 1;
 				}
 
-				pds.push(fln); // create and push operator node with operand children
+				pds.push(fln);
+
 			}
-			else if (pt.tt == TokenType::elastic) {
+			else if (pt.tt == TokenType::ELASTIC) {
 				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), scope);
 				LASTVariable* lvp = new LASTVariable(l.root);
-				// LASTVariable lv = *lvp; 
-				// weirdly simply adding the above line (uncommented) fixed a very bizarre implicit casting behavior. 
-				// After I commented it out again, it was still fixed. Nothing else was changed before or after. compiler bug? not sure how to reproduce
 				pds.push(new LineNode(lvp, pt.rt));
 				LineNode* lnpp = pds.top();
 			}
+			else if (pt.tt == TokenType::DECL_FUNC) {
+				// TODO: implement function declaration
+			}
 			else {
 				variable v = convert_symbol(pt, scope);
-				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(scope[pt.val], pt.rt, pt.val)); //use mapped value for lvals (will be useful for garbage collection)
+
+				// lvals are references into scope object
+				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(scope[pt.val], pt.rt, pt.val)); 
 				breadthwise.push_back(pds.top());
 			}
 		}
@@ -228,9 +224,9 @@ namespace lwc {
 			root = pds.top(); //remaining node is the root
 		}
 #ifdef PRINT_LVAL_INFO
-		rebuild();
+		print_lval_info();
 #endif // _DEBUG
-	}
+		}
 
 	/*LAST::LAST(const LAST& last2)
 	{
@@ -242,16 +238,16 @@ namespace lwc {
 
 	// Instead of using hashing every function call, scope could return two ids which
 	//		would point to pointers on an array held by Scope
-	void LAST::rebuild() {
-		for (LineNode* &lnp : breadthwise) {
+	void LAST::print_lval_info() {
+		for (LineNode*& lnp : breadthwise) {
 			//std::cout << "bw" << lnp->is_leaf << std::endl;
 			if (!(lnp->is_rval)) {
-				std::cout << "LVAL_INFO " << sizeof(lnp) << " " <<lnp->name << " " << lnp->data.lvar<< std::endl;
+				std::cout << "LVAL_INFO " << sizeof(lnp) << " " << lnp->name << " " << lnp->data.lvar << std::endl;
 			}
 		}
 	}
 
-	lwc::variable &evaluate_line(lwc::LineNode& node) {
+	lwc::variable& evaluate_line(lwc::LineNode& node) {
 
 		for (int i = 0; i < node.sz; ++i) {
 			if (node.get_leaf_state(i)) {
@@ -264,7 +260,7 @@ namespace lwc {
 		return node.func(node.arg_arr, node.rgstr, node.sz);
 	}
 
-	lwc::variable &evaluate_lines(CodeBlock& lines) {
+	lwc::variable& evaluate_lines(CodeBlock& lines) {
 		lwc::variable* var = nullptr;
 		for (int i = 0; i < lines.size(); ++i) {
 			var = &evaluate_line(*lines[i].root);
@@ -272,41 +268,16 @@ namespace lwc {
 		return *var;
 	}
 
-	CodeBlock parse_from_slines(std::vector<std::string> slines) {
+	CodeBlock _parse_tqref(std::vector<TokenQueue> lines_vec, Scope &scope)
+	{
 		std::stack<CodeBlock> blockstack;
 		std::stack<LineNode*> bnodes;
 		CodeBlock main_scope;
 		blockstack.push(main_scope);
-		for (std::string sline : slines) {
-			TokenQueue tq(sline);
-			LineNode* bnode = nullptr;
-			if (!tq.empty()) {
-				blockstack.top().emplace_back(shunting_yard(tq), global);
-				bnode = blockstack.top().back().block_node;
-			}
-			if (bnode) {
-				blockstack.emplace();
-				bnodes.push(bnode);
-			}
-			else if (tq.brace_end) {
-				auto bbb = blockstack.top();
-				CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
-				blockstack.pop();
-				LineNode* ln = new LineNode(cbv, new TypeImpl<NumVar>);
-				bnodes.top()->add_branch(ln);
-				bnodes.pop();
-			}
-		}
-		return blockstack.top();
-	}
-
-	CodeBlock parse_from_tq(std::vector<TokenQueue> lines_vec) { // parse tokenqueue that has been preprocessed with TokenQueue and shunting_yard
-		std::stack<CodeBlock> blockstack;
-		std::stack<LineNode*> bnodes;
 		for (auto line : lines_vec) {
 			LineNode* bnode = nullptr;
 			if (!line.empty()) {
-				blockstack.top().emplace_back(line, global);
+				blockstack.top().emplace_back(line, scope);
 				bnode = blockstack.top().back().block_node;
 			}
 			if (bnode) {
@@ -324,5 +295,19 @@ namespace lwc {
 		}
 		return blockstack.top();
 	}
+
+	CodeBlock threadsafe_parse_from_tq(std::vector<TokenQueue> lines_vec, Scope scope) { // parse tokenqueue that has been preprocessed with TokenQueue and shunting_yard
+		return _parse_tqref(lines_vec, scope);
+	}
+
+	CodeBlock parse_from_slines(std::vector<std::string> slines, Scope &scope) {
+		std::vector<TokenQueue> lines_vec;
+		for (auto& s : slines) {
+			lines_vec.push_back(shunting_yard(TokenQueue(s)));
+		}
+		return _parse_tqref(lines_vec, scope);
+	}
+
+	
 
 }

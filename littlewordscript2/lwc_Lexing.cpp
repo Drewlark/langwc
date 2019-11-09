@@ -3,12 +3,12 @@
 namespace lwc {
 	
 	ParseToken::ParseToken(std::string _val, TokenType _tt, RegisterType* _rt, int _precedence, bool _leftassoc, bool _rval) : val(_val), tt(_tt), rt(_rt), precedence(_precedence), leftassoc(_leftassoc), rval(_rval) {
-		if (tt == TokenType::func && func_ids.count(val)) {
+		if (tt == TokenType::CALL && func_ids.count(val)) {
 			opfunc = func_ids[val].fnc;
 			argn = func_ids[val].arg_count;
 			rval = func_ids[val].rval;
 		}
-		else if (tt == TokenType::op) {
+		else if (tt == TokenType::OP) {
 			rval = op_ids.at(val).rval;
 		}
 	}
@@ -19,24 +19,25 @@ namespace lwc {
 		}
 	}
 
+	void TokenQueue::dump_keyword_q() {
+		data.back().keywords = keyword_buffer;
+	}
+
 	void TokenQueue::add_unknown(std::string& unk, QState& qs) {
 		//std::cout << "unk: " << unk << endl;
 		if (!unk.empty()) {
 			if (KEYWORD_STRINGS.count(unk)) {
-				keyword_queue.push_back(KEYWORD_STRINGS.at(unk));
+				keyword_buffer.insert(KEYWORD_STRINGS.at(unk));
 			}
-			else if (qs == QState::num)
-				data.push_back(ParseToken(unk, TokenType::num, nullptr));
+			else if (qs == QState::NUM)
+				data.push_back(ParseToken(unk, TokenType::NUM, nullptr));
 			else {
-				data.push_back(ParseToken(unk, TokenType::name, nullptr));
-				if (!keyword_queue.empty()) {
-					while (!keyword_queue.empty()) {
-						data.back().keywords.insert(keyword_queue.front());
-						keyword_queue.pop_front();
-					}
+				data.push_back(ParseToken(unk, TokenType::NAME, nullptr));
+				if (!keyword_buffer.empty()) {
+					dump_keyword_q();
 				}
 			}
-			qs = QState::def;
+			qs = QState::DEF;
 			unk.clear();
 			check_for_argness();
 			
@@ -50,7 +51,7 @@ namespace lwc {
 			if (c == ')')
 			{
 				add_unknown(tmp, qs);
-				data.emplace_back(std::string(1, c), TokenType::rparen, nullptr);
+				data.emplace_back(std::string(1, c), TokenType::RPAREN, nullptr);
 				ret = true;
 				--paren_depth;
 				
@@ -61,16 +62,22 @@ namespace lwc {
 				
 			}
 			else if (c == '(') {
+				
 				if (!tmp.empty() && !op_ids.count(tmp)) {
-					data.push_back(ParseToken(tmp, TokenType::func, func_ids[tmp].rt));
+					keyword_buffer.count(Keywords::FUNC)  ?  // give new token proper type, declaration or call
+						data.push_back(ParseToken(tmp, TokenType::DECL_FUNC, func_ids[tmp].rt)) : 
+						data.push_back(ParseToken(tmp, TokenType::CALL, func_ids[tmp].rt));
+					
+					dump_keyword_q(); 
+					// check if this is a function definition rather than just a call
 					func_stack.push({ data.back(), paren_depth });
 					tmp.clear();
 				}
 				++paren_depth;
-				data.emplace_back(std::string(1, c), TokenType::lparen, nullptr);
+				data.emplace_back(std::string(1, c), TokenType::LPAREN, nullptr);
 				ret = true;
 			}
-			if (ret) qs = QState::def;
+			if (ret) qs = QState::DEF;
 		}
 		else {
 			ret = c == '(' || c == ')';// if this function has already been called, we still want to know the nature of the character without the extra operations
@@ -80,28 +87,28 @@ namespace lwc {
 
 	TokenQueue::TokenQueue(std::string s) {
 		std::string temp = "";
-		QState qs = QState::def;
+		QState qs = QState::DEF;
 		for (char c : s) {
 			if (c == '#') {
 				return;
 			}
 			bool parens_checked = false;
 			bool tc_appended = false;
-			if (qs == QState::op) {
+			if (qs == QState::OP) {
 				if (op_ids.count(temp) && !op_ids.count(temp + c)) {
 					data.emplace_back(op_ids.at(temp));
 					temp.clear();
 					if (!checkparens(temp, c, qs, parens_checked) && c != '`') {
 						//temp = c;
 						//tc_appended = true;
-						qs = QState::def;
+						qs = QState::DEF;
 					}
 				}
 			}
-			if (qs == QState::elastic) {
+			if (qs == QState::ELASTIC) {
 				if (c == '`') {
-					data.push_back(ParseToken(temp, TokenType::elastic, new TypeImpl<NumVar>));
-					qs = QState::def;
+					data.push_back(ParseToken(temp, TokenType::ELASTIC, new TypeImpl<NumVar>));
+					qs = QState::DEF;
 					temp.clear();
 					if (!func_stack.empty()) {
 						++func_stack.top().first.argn;
@@ -116,7 +123,7 @@ namespace lwc {
 					if (op_ids.count(temp) > 0) {
 						data.emplace_back(op_ids.at(temp));
 						temp = c;
-						qs = QState::num;
+						qs = QState::NUM;
 					}
 					else {
 						temp += c;
@@ -124,36 +131,36 @@ namespace lwc {
 				}
 				else {
 					temp += c;
-					qs = QState::num;
+					qs = QState::NUM;
 				}
 			}
 			else if (c == '`') {
 				add_unknown(temp, qs);
-				qs = QState::elastic;
+				qs = QState::ELASTIC;
 			}
 
 			else if ((reserved_chars.count(c) && !op_ids.count(temp + c)) || reserved_chars.count(c) && temp.empty()) {
 				add_unknown(temp, qs);
 				temp = c;
-				qs = QState::op;
+				qs = QState::OP;
 			}
 
 			else if (c == ',') {
 				add_unknown(temp, qs);
-				data.emplace_back(",", TokenType::comma, nullptr);
+				data.emplace_back(",", TokenType::COMMA, nullptr);
 				/*if (!func_stack.empty()) {
 					++func_stack.top()->argn;
 				}*/
-				qs = QState::def;
+				qs = QState::DEF;
 			}
 			else if (c == ' ') {
-				if (qs == QState::def) {
+				if (qs == QState::DEF) {
 					add_unknown(temp, qs);
 				}
 				continue;
 			}
 			else if (c == '{') {
-				if (!data.empty() && data.back().tt == TokenType::rparen)
+				if (!data.empty() && data.back().tt == TokenType::RPAREN)
 					data.back().brace_start = true;
 			}
 			else if (c == '}') {
@@ -161,7 +168,7 @@ namespace lwc {
 					add_unknown(temp, qs);
 				}
 				brace_end = true;
-				qs = QState::def;
+				qs = QState::DEF;
 			}
 			else
 			{

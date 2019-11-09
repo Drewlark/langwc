@@ -31,6 +31,8 @@ namespace lwc {
 		{"pxnor", BuiltInIdentity(builtin_func(lwc::sexecute), new TypeImpl<NumVar>())}
 	};
 
+	
+
 	bool is_num(const std::string& s);
 
 	//lwc::variable evaluate_line(lwc::LineNode* node);
@@ -43,8 +45,10 @@ namespace lwc {
 
 	lwc::variable &evaluate_lines(CodeBlock &lines);
 
-	CodeBlock parse_from_slines(std::vector<std::string> slines);
+	CodeBlock _parse_tqref(std::vector<TokenQueue> lines_vec, Scope &scope);
 
-	CodeBlock parse_from_tq(std::vector<TokenQueue>);
+	CodeBlock parse_from_slines(std::vector<std::string> slines, Scope &scope);
+
+	CodeBlock threadsafe_parse_from_tq(std::vector<TokenQueue>, Scope scope);
 }
 #endif

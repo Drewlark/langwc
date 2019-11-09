@@ -32,8 +32,10 @@ int main(int argc, char* argv[])
 		}
 		fs.flush();
 		fs.close();
+
+		lwc::Scope global;
 		std::unordered_map<std::string, lwc::variable> my_varmap;
-		lwc::CodeBlock root_scope(lwc::parse_from_slines(words));
+		lwc::CodeBlock root_scope(lwc::parse_from_slines(words, global));
 		std::cout << "build complete" << std::endl;
 
 		auto start_eval = std::chrono::high_resolution_clock::now();

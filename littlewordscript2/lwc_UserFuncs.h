@@ -7,14 +7,17 @@
 namespace lwc {
 
 	struct UserFunctionTemplate { 
-		Scope s;
+		Scope scope;
 		std::vector<TokenQueue> pre_block;
-		UserFunctionTemplate(std::vector<TokenQueue> _pre_block, Scope &_s) : pre_block(_pre_block) {
-			s.parent = &_s;
+		UserFunctionTemplate(std::vector<TokenQueue> _preprocessed_block, Scope & parent_scope, std::vector<ParseToken> params) : pre_block(_preprocessed_block) {
+			for (const auto &pt : params) {
+				scope.handle_generic_token(pt);
+			}
+			scope.parent = &parent_scope;
 		}
 
 		variable simple_call() {
-			auto entry = parse_from_tq(pre_block);
+			auto entry = threadsafe_parse_from_tq(pre_block);
 			return evaluate_lines(entry);
 		}
 	};
@@ -26,7 +29,7 @@ namespace lwc {
 	public:
 		UserFunctionVariable(UserFunctionTemplate _uft) : uft(_uft){}
 		long get() { return uft.simple_call()->get(); };
-		void* get_vp(void*& reg) { *(long*)reg = this->get();  return reg; }
+		void* get_vp(void*& reg) { return uft.simple_call(); }
 		RegisterType const* const get_typei();
 	};
 

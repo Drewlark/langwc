@@ -129,10 +129,12 @@
     <ClInclude Include="lwc_typedefs.h" />
     <ClInclude Include="lwc_Parser.h" />
     <ClInclude Include="lwc_UserFuncs.h" />
+    <ClInclude Include="lwc_utility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="builtins.cpp" />
     <ClCompile Include="lwc_Lexing.cpp" />
+    <ClCompile Include="lwc_Scope.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="lwc_Parser.cpp" />
     <ClCompile Include="typedefs.cpp" />

@@ -56,7 +56,7 @@ namespace lwc {
 	const static TypeImpl<BaseVariable> BASE_TYPEI;
 	const static TypeImpl<NumVar> NUM_TYPEI;
 
-	enum class TokenType { num, op, name, lparen, rparen, func, comma, elastic };
+	enum class TokenType { NUM, OP, NAME, LPAREN, RPAREN, CALL, COMMA, ELASTIC, DECL_FUNC };
 
 	class ParseToken
 	{
@@ -74,7 +74,7 @@ namespace lwc {
 		std::set<lwc::Keywords> keywords;
 
 		ParseToken(std::string _val, TokenType _tt, RegisterType* _rt, int _precedence = 0, bool _leftassoc = 0, bool _rval = false);
-		ParseToken(OperatorIdentity oid) : tt(TokenType::op), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt), val(oid.debug_name) {}; //No value is possible here because the string value is irrelevant to an op
+		ParseToken(OperatorIdentity oid) : tt(TokenType::OP), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt), val(oid.debug_name) {}; //No value is possible here because the string value is irrelevant to an op
 		bool operator<(const ParseToken& pt) 
 		{ return precedence < pt.precedence; }
 		bool operator>(const ParseToken& pt) 
@@ -86,12 +86,13 @@ namespace lwc {
 	};
 
 	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
-		enum class QState { def, op, num, elastic };
+		enum class QState { DEF, OP, NUM, ELASTIC };
 		std::deque<lwc::ParseToken> data;
 		std::stack<std::pair<lwc::ParseToken&, int>> func_stack;
-		std::deque<lwc::Keywords> keyword_queue;
+		std::set<lwc::Keywords> keyword_buffer;
 		int paren_depth = 0;
 		void check_for_argness(); //Checks if func stack is not empty, and then increments argn for that func if not. Only call this when var-like token is found.
+		void dump_keyword_q();
 		void add_unknown(std::string& unk, QState& qs);
 		bool checkparens(std::string& tmp, char& c, QState& qs, bool& pcheck);
 	public:
@@ -141,7 +142,7 @@ namespace lwc {
 		void fit_args();
 		void fit_register();
 		void fit_leaf_states();
-		bool get_leaf_state(const int& i);
+		inline bool get_leaf_state(const int& i);
 
 		LineNode(std::shared_ptr<master_lns> _master, builtin_func _func, RegisterType* _rt, branches_t _branches = {}, bool rval = false);
 
@@ -152,7 +153,7 @@ namespace lwc {
 
 		void add_branch(LineNode* ln);
 
-		variable* get_leaf() {return is_rval ? &data.var : data.lvar;}
+		inline variable* get_leaf() {return is_rval ? &data.var : data.lvar;}
 
 		LineNode* get_branch(const int& index);
 	};
@@ -166,7 +167,7 @@ namespace lwc {
 		uint8_t block_starts = 0;
 		LineNode* block_node = nullptr;
 		std::vector<LineNode*> breadthwise;
-		void rebuild();
+		void print_lval_info();
 		LAST(TokenQueue tq, Scope& scope);
 		//LAST(const LAST& last2);
 #if defined(SHOW_LAST_DEL)		
@@ -201,6 +202,8 @@ namespace lwc {
 		bool is_var_local(std::string s) {
 			return names.count(s);
 		}
+
+		variable * handle_generic_token(const ParseToken& pt);
 
 		template <class T = NumVar> // T represents type to initialize to, should always be derivative of BaseVariable
 		variable * handle_name(const std::string & name) {
