@@ -6,13 +6,6 @@
 #include <string>
 #include <chrono>
 #include "lwc_Parser.h"
-//Testing git push from different machine
-
-void remove_whitespace(std::string &str) {
-	string fin;
-	for (const char& c : str) if (!isspace(c)) fin.push_back(c);
-	str = fin;
-}
 
 int main(int argc, char* argv[])
 {
