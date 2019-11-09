@@ -211,7 +211,6 @@ namespace lwc {
 			}
 			else if (pt.tt == TokenType::DECL_FUNC) {
 				// TODO: implement function declaration
-				UserFunctionTemplate uft();
 			}
 			else {
 				variable v = convert_symbol(pt, scope);
