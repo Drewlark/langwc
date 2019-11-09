@@ -27,7 +27,6 @@ namespace lwc {
 		virtual BaseVariable operator*(BaseVariable& bv) { return BaseVariable(); }
 		virtual BaseVariable operator/(BaseVariable& bv) { return BaseVariable(); }
 		virtual void operator=(BaseVariable& bv) {}
-		virtual void operator=(const BaseVariable& bv) {}
 		virtual RegisterType const* const get_typei() { return NULL; }
 		virtual std::stringstream repr() { std::stringstream ss; return ss; };
 		virtual ~BaseVariable() {}

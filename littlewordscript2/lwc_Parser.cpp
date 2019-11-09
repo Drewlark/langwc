@@ -1,4 +1,5 @@
 #include "lwc_Parser.h"
+#include "lwc_UserFuncs.h"
 #include <algorithm>
 #ifdef _DEBUG
 #include <functional>
@@ -207,10 +208,10 @@ namespace lwc {
 				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), scope);
 				LASTVariable* lvp = new LASTVariable(l.root);
 				pds.push(new LineNode(lvp, pt.rt));
-				LineNode* lnpp = pds.top();
 			}
 			else if (pt.tt == TokenType::DECL_FUNC) {
 				// TODO: implement function declaration
+				UserFunctionTemplate uft();
 			}
 			else {
 				variable v = convert_symbol(pt, scope);
@@ -274,18 +275,19 @@ namespace lwc {
 		std::stack<LineNode*> bnodes;
 		CodeBlock main_scope;
 		blockstack.push(main_scope);
+
 		for (auto line : lines_vec) {
 			LineNode* bnode = nullptr;
 			if (!line.empty()) {
 				blockstack.top().emplace_back(line, scope);
-				bnode = blockstack.top().back().block_node;
+				bnode = blockstack.top().back().block_node; // block_node here might also be nullptr
 			}
 			if (bnode) {
 				blockstack.emplace();
 				bnodes.push(bnode);
 			}
-			else if (line.brace_end) {
-				auto bbb = blockstack.top();
+			else if (!bnode && line.brace_end) {
+				//if(bnodes.top().
 				CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
 				blockstack.pop();
 				LineNode* ln = new LineNode(cbv, new TypeImpl<NumVar>);

@@ -133,7 +133,7 @@ namespace lwc {
 		std::string name; // important for debugging
 
 		variable** arg_arr = nullptr;
-		int sz = 0;
+		unsigned int sz = 0;
 		RegisterType* rt = nullptr;
 		variable rgstr = nullptr;
 
@@ -216,7 +216,7 @@ namespace lwc {
 				return &names[name];
 			}
 		}
-		int count(std::string& name) { return names.count(name); }
+		size_t count(std::string& name) { return names.count(name); }
 		variable* operator[](std::string& key) { return find_name_upward(key); }
 
 	};

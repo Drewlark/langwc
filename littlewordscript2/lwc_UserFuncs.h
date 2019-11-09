@@ -17,7 +17,7 @@ namespace lwc {
 		}
 
 		variable simple_call() {
-			auto entry = threadsafe_parse_from_tq(pre_block);
+			auto entry = threadsafe_parse_from_tq(pre_block, scope);
 			return evaluate_lines(entry);
 		}
 	};
