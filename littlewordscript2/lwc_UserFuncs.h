@@ -9,9 +9,10 @@ namespace lwc {
 	struct UserFunctionTemplate { 
 		Scope scope;
 		std::vector<TokenQueue> pre_block;
-		UserFunctionTemplate(std::vector<TokenQueue> _preprocessed_block, Scope & parent_scope, std::vector<ParseToken> params) : pre_block(_preprocessed_block) {
+		UserFunctionTemplate() {};
+		UserFunctionTemplate(std::vector<TokenQueue> _preprocessed_block, Scope & parent_scope, std::vector<std::string> params) : pre_block(_preprocessed_block) {
 			for (const auto &pt : params) {
-				scope.handle_generic_token(pt);
+				//scope.handle_generic_token(pt);
 			}
 			scope.parent = &parent_scope;
 		}
@@ -24,13 +25,13 @@ namespace lwc {
 
 
 	class UserFunctionVariable : public BaseVariable { // wraps UserFunction class for get() availability
-		static const RegisterType const* typei;
+		static RegisterType const* typei;
 		UserFunctionTemplate uft;
 	public:
 		UserFunctionVariable(UserFunctionTemplate _uft) : uft(_uft){}
 		long get() { return uft.simple_call()->get(); };
 		void* get_vp(void*& reg) { return uft.simple_call(); }
-		RegisterType const* const get_typei();
+		RegisterType const* const get_typei() { return typei; }
 	};
 
 }

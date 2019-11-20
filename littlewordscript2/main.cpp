@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	std::fstream fs;
 	std::string s;
 	std::vector<std::string> words;
-	
+
 	std::cout << "Reading " << file_name << "...." << std::endl;
 
 	fs.open(file_name.c_str());

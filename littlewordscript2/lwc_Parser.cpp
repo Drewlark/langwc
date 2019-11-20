@@ -30,7 +30,7 @@ namespace lwc {
 	void LineNode::fit_leaf_states()
 	{
 		leaf_states.clear();
-		for (int i = 0; i < sz; ++i) {
+		for (unsigned int i = 0; i < sz; ++i) {
 			leaf_states.push_back(get_branch(i)->is_leaf);
 		}
 	}
@@ -40,7 +40,9 @@ namespace lwc {
 		return leaf_states[i];
 	}
 
-	LineNode::LineNode(std::shared_ptr<master_lns> _master, builtin_func _func, RegisterType* _rt, branches_t _branches, bool rval) : func(_func), rt(_rt), branches(_branches), is_rval(rval), master(_master)
+	LineNode::LineNode(TokenType _tt, std::shared_ptr<master_lns> _master, builtin_func _func,
+		const RegisterType* _rt, branches_t _branches, bool rval) 
+		: func(_func), rt(_rt), branches(_branches), is_rval(rval), master(_master), tt(_tt)
 	{
 		fit_args();
 		fit_register();
@@ -86,7 +88,7 @@ namespace lwc {
 
 	TokenQueue shunting_yard(TokenQueue tq) //Adapted Shunting-Yard algorithm. output is the output queue
 	{
-		TokenQueue out_q(tq.brace_end); //output queue
+		TokenQueue out_q(tq.brace_ends); //output queue
 		std::stack<ParseToken> op_stk; //operator stack
 
 		while (!tq.empty()) {
@@ -176,7 +178,10 @@ namespace lwc {
 		while (!tq.empty()) {
 			ParseToken pt(tq.front());
 			tq.void_pop();
-			if (pt.tt == TokenType::OP) {
+
+			switch (pt.tt) {
+			case (TokenType::OP):
+			{
 				branches_t temp;
 				for (int i = 0; i < 2; ++i) {
 					master->push_back(pds.top());
@@ -184,9 +189,11 @@ namespace lwc {
 					pds.pop();
 				}
 				std::reverse(std::begin(temp), std::end(temp));
-				pds.push(new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval));
+				pds.push(new LineNode(pt.tt, master, pt.opfunc, pt.rt, temp, pt.rval));
+				break;
 			}
-			else if (pt.tt == TokenType::CALL) {
+			case (TokenType::CALL):
+			{
 				branches_t temp;
 				for (int i = 0; i < pt.argn; ++i) {
 					master->push_back(pds.top());
@@ -195,28 +202,46 @@ namespace lwc {
 
 				}
 				std::reverse(std::begin(temp), std::end(temp));
-				LineNode* fln = new LineNode(master, pt.opfunc, pt.rt, temp, pt.rval);
+				LineNode* fln = new LineNode(pt.tt, master, pt.opfunc, pt.rt, temp, pt.rval);
 				if (pt.brace_start) {
 					block_node = fln;
 					block_starts += 1;
 				}
 
 				pds.push(fln);
-
+				break;
 			}
-			else if (pt.tt == TokenType::ELASTIC) {
+			case(TokenType::ELASTIC):
+			{
 				LAST l = LAST(shunting_yard(TokenQueue(pt.val)), scope);
 				LASTVariable* lvp = new LASTVariable(l.root);
-				pds.push(new LineNode(lvp, pt.rt));
+				pds.push(new LineNode(pt.tt, lvp, pt.rt));
+				break;
 			}
-			else if (pt.tt == TokenType::DECL_FUNC) {
-				// TODO: implement function declaration
+			case(TokenType::DECL_FUNC):
+			{
+				branches_t temp;
+				for (int i = 0; i < pt.argn; ++i) {
+					master->push_back(pds.top());
+					temp.push_back(master->size() - 1);
+					pds.pop();
+
+				}
+				std::reverse(std::begin(temp), std::end(temp));
+				LineNode* fln = new LineNode(pt.tt, master, pt.opfunc, pt.rt, temp, pt.rval);
+				if (pt.brace_start) {
+					block_node = fln;
+					block_starts += 1;
+				}
+				flags.insert(LASTFlags::DECL);
+				pds.push(fln);
+				break;
 			}
-			else {
+			default:
 				variable v = convert_symbol(pt, scope);
 
 				// lvals are references into scope object
-				v ? pds.push(new LineNode(v, pt.rt)) : pds.push(new LineNode(scope[pt.val], pt.rt, pt.val)); 
+				v ? pds.push(new LineNode(pt.tt, v, pt.rt)) : pds.push(new LineNode(pt.tt, scope[pt.val], pt.rt, pt.val));
 				breadthwise.push_back(pds.top());
 			}
 		}
@@ -226,7 +251,7 @@ namespace lwc {
 #ifdef PRINT_LVAL_INFO
 		print_lval_info();
 #endif // _DEBUG
-		}
+	}
 
 	/*LAST::LAST(const LAST& last2)
 	{
@@ -249,7 +274,7 @@ namespace lwc {
 
 	lwc::variable& evaluate_line(lwc::LineNode& node) {
 
-		for (int i = 0; i < node.sz; ++i) {
+		for (unsigned int i = 0; i < node.sz; ++i) {
 			if (node.get_leaf_state(i)) {
 				node.arg_arr[i] = node.get_branch(i)->get_leaf();
 			}
@@ -268,7 +293,27 @@ namespace lwc {
 		return *var;
 	}
 
-	CodeBlock _parse_tqref(std::vector<TokenQueue> lines_vec, Scope &scope)
+	CodeBlock r_parse_tq(std::vector<TokenQueue> lines_vec, Scope& scope) {
+		CodeBlock cb;
+		std::vector<TokenQueue> tq_buffer;
+		auto starts = 0;
+		for (auto line : lines_vec) {
+			if (starts <= 0) {
+				starts += line.brace_starts;
+				cb.emplace_back(line, scope);
+			}
+			else {
+				tq_buffer.push_back(line);
+				starts -= line.brace_ends;
+				if (starts <= 0) {
+					auto cbv = new CodeBlockVariable(r_parse_tq(tq_buffer, scope));
+					cb.back().block_node = new LineNode(TokenType::NUM, cbv, &NUM_TYPEI);
+				}
+			}
+		}
+	}
+
+	CodeBlock _parse_tq(std::vector<TokenQueue> lines_vec, Scope& scope)
 	{
 		std::stack<CodeBlock> blockstack;
 		std::stack<LineNode*> bnodes;
@@ -278,37 +323,48 @@ namespace lwc {
 		for (auto line : lines_vec) {
 			LineNode* bnode = nullptr;
 			if (!line.empty()) {
+
 				blockstack.top().emplace_back(line, scope);
 				bnode = blockstack.top().back().block_node; // block_node here might also be nullptr
 			}
-			if (bnode) {
+
+			if (bnode) { // bnode will only be set if this line had a cbv attached
 				blockstack.emplace();
 				bnodes.push(bnode);
 			}
-			else if (!bnode && line.brace_end) {
-				//if(bnodes.top().
-				CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
-				blockstack.pop();
-				LineNode* ln = new LineNode(cbv, new TypeImpl<NumVar>);
-				bnodes.top()->add_branch(ln);
-				bnodes.pop();
+			else if (line.brace_ends) {
+				if (bnodes.top()->tt == TokenType::DECL_FUNC) {
+					std::vector<std::string> params;
+					for (unsigned int i = 0; i < bnodes.top()->sz; ++i) {
+						params.push_back(bnodes.top()->get_branch(i)->name);
+					}
+					//UserFunctionTemplate uft(, scope, params);
+				}
+				else {
+					CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
+					blockstack.pop();
+					LineNode* ln = new LineNode(TokenType::NUM, cbv, &NUM_TYPEI);
+					bnodes.top()->add_branch(ln);
+					bnodes.pop();
+				}
 			}
 		}
 		return blockstack.top();
 	}
 
-	CodeBlock threadsafe_parse_from_tq(std::vector<TokenQueue> lines_vec, Scope scope) { // parse tokenqueue that has been preprocessed with TokenQueue and shunting_yard
-		return _parse_tqref(lines_vec, scope);
+	// parse tokenqueue that has been preprocessed with TokenQueue and shunting_yard
+	CodeBlock threadsafe_parse_from_tq(std::vector<TokenQueue> lines_vec, Scope scope) {
+		return _parse_tq(lines_vec, scope);
 	}
 
-	CodeBlock parse_from_slines(std::vector<std::string> slines, Scope &scope) {
+	CodeBlock parse_from_slines(std::vector<std::string> slines, Scope& scope) {
 		std::vector<TokenQueue> lines_vec;
 		for (auto& s : slines) {
 			lines_vec.push_back(shunting_yard(TokenQueue(s)));
 		}
-		return _parse_tqref(lines_vec, scope);
+		return _parse_tq(lines_vec, scope);
 	}
 
-	
+
 
 }

@@ -44,19 +44,19 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="typedefs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="lwc_Parser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="builtins.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lwc_Lexing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lwc_Scope.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lwc_typedefs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lwc_builtins.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

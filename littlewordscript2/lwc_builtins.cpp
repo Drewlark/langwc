@@ -49,7 +49,7 @@ namespace lwc {
 	}
 
 	builtin_header(refassign) {
-		free(*vars[0]);
+		delete *vars[0];
 		*vars[0] = *vars[1];
 		return *vars[1];
 	}
@@ -87,7 +87,7 @@ namespace lwc {
 
 	builtin_header(it_elast)
 	{
-		free(*vars[0]);
+		delete* vars[0];
 		*vars[0] = (LASTVariable*)(*vars[1]);
 		return *vars[0];
 	}

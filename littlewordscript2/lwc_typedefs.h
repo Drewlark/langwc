@@ -6,7 +6,7 @@
 #include <stack>
 #include <queue>
 #include <unordered_map>
-#include <type_traits> // For ensuring certain templated functions only use template classes deriving from BaseVariable (defined in lwc_prims.h)
+#include <type_traits>
 #include <iostream>
 #include <set>
 #include "lwc_prims.h"
@@ -47,6 +47,7 @@ namespace lwc {
 	template<typename T> class TypeImpl : public RegisterType
 	{
 	public:
+		TypeImpl() {}
 		virtual void* allocate()const { return new T; }
 		virtual void* cast(void* obj)const { return static_cast<T*>(obj); }
 		virtual int size()const { return sizeof(T); }
@@ -63,18 +64,22 @@ namespace lwc {
 	public:
 		std::string val;
 		TokenType tt;
-		int precedence; //meaningless if tt is not TokenType::op
+		int precedence; // meaningless if tt is not TokenType::op
 		bool leftassoc = false;
 		bool brace_start = false;
 		bool brace_end = false;
 		builtin_func opfunc = nullptr;
 		int argn = 0;
 		bool rval = false;
-		RegisterType* rt = nullptr;
+		const RegisterType* rt = nullptr;
 		std::set<lwc::Keywords> keywords;
 
-		ParseToken(std::string _val, TokenType _tt, RegisterType* _rt, int _precedence = 0, bool _leftassoc = 0, bool _rval = false);
-		ParseToken(OperatorIdentity oid) : tt(TokenType::OP), precedence(oid.precedence), leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt), val(oid.debug_name) {}; //No value is possible here because the string value is irrelevant to an op
+		ParseToken(std::string _val, TokenType _tt, const RegisterType* _rt, int _precedence = 0,
+			bool _leftassoc = 0, bool _rval = false);
+
+		// No value is possible here because the string value is irrelevant to an op
+		ParseToken(OperatorIdentity oid) : tt(TokenType::OP), precedence(oid.precedence),
+			leftassoc(oid.leftassoc), opfunc(oid.fnc), rval(oid.rval), rt(oid.rt), val(oid.debug_name) {};
 		bool operator<(const ParseToken& pt) 
 		{ return precedence < pt.precedence; }
 		bool operator>(const ParseToken& pt) 
@@ -85,19 +90,24 @@ namespace lwc {
 		{ return precedence <= pt.precedence; }
 	};
 
-	class TokenQueue { //TokenQueue is an object which represents the end result of a lexed line. The constructor is LWC's lexer
+	// represents the end result of a lexed line. The constructor is LWC's lexer
+	class TokenQueue {
 		enum class QState { DEF, OP, NUM, ELASTIC };
 		std::deque<lwc::ParseToken> data;
 		std::stack<std::pair<lwc::ParseToken&, int>> func_stack;
 		std::set<lwc::Keywords> keyword_buffer;
 		int paren_depth = 0;
-		void check_for_argness(); //Checks if func stack is not empty, and then increments argn for that func if not. Only call this when var-like token is found.
+
+		// Checks if func stack is not empty, and then increments argn for that func if not. 
+		// Only call this when var-like token is found.
+		void check_for_argness(); 
 		void dump_keyword_q();
 		void add_unknown(std::string& unk, QState& qs);
 		bool checkparens(std::string& tmp, char& c, QState& qs, bool& pcheck);
 	public:
-		bool brace_end = false;
-		TokenQueue(bool _brace_end) : brace_end(_brace_end) {}
+		uint8_t brace_ends = 0;
+		uint8_t brace_starts = 0;
+		TokenQueue(bool _brace_end) : brace_ends(_brace_end) {}
 		TokenQueue(std::string s);
 		ParseToken pop();
 		void void_pop() { data.pop_front();}
@@ -123,7 +133,6 @@ namespace lwc {
 	public:
 		builtin_func func = nullptr;
 		std::vector<LAST> output_block;
-
 		bool is_rval = true;
 		union {
 			variable var = nullptr;
@@ -134,21 +143,31 @@ namespace lwc {
 
 		variable** arg_arr = nullptr;
 		unsigned int sz = 0;
-		RegisterType* rt = nullptr;
+		const RegisterType* rt = nullptr;
 		variable rgstr = nullptr;
 
-
+		TokenType tt;
 
 		void fit_args();
 		void fit_register();
 		void fit_leaf_states();
 		inline bool get_leaf_state(const int& i);
 
-		LineNode(std::shared_ptr<master_lns> _master, builtin_func _func, RegisterType* _rt, branches_t _branches = {}, bool rval = false);
+		LineNode(TokenType _tt, std::shared_ptr<master_lns> _master, builtin_func _func,
+			const RegisterType* _rt, branches_t _branches = {}, bool rval = false);
 
-		LineNode(variable _var, RegisterType* _rt) :rt(_rt), master(LEAF_MASTER) { data.var = _var; is_leaf = true; }
-		LineNode(variable* _lvar, RegisterType* _rt, std::string _name) : rt(_rt), name(_name), master(LEAF_MASTER) { data.lvar = _lvar; is_leaf = true; is_rval = false; }
-		LineNode() : master(LEAF_MASTER) { is_leaf = true;}
+		LineNode(TokenType _tt, variable _var, const RegisterType* _rt) 
+			: tt(_tt), rt(_rt), master(LEAF_MASTER) { data.var = _var; is_leaf = true; }
+		
+		LineNode(TokenType _tt, variable* _lvar, const RegisterType* _rt, std::string _name) 
+			: tt(_tt), rt(_rt), name(_name), master(LEAF_MASTER) 
+		{ 
+			data.lvar = _lvar; 
+			is_leaf = true; 
+			is_rval = false; 
+		}
+		
+		LineNode() : master(LEAF_MASTER) { tt = TokenType::NUM; is_leaf = true; }
 		~LineNode() { delete[] arg_arr;}
 
 		void add_branch(LineNode* ln);
@@ -159,7 +178,8 @@ namespace lwc {
 	};
 
 	class Scope;
-
+	
+	enum class LASTFlags{DECL};
 	struct LAST { //"Line" abstract syntax tree
 		std::shared_ptr<master_lns> master = std::make_shared<master_lns>();
 		LineNode* root = nullptr;
@@ -167,6 +187,7 @@ namespace lwc {
 		uint8_t block_starts = 0;
 		LineNode* block_node = nullptr;
 		std::vector<LineNode*> breadthwise;
+		std::set<LASTFlags> flags;
 		void print_lval_info();
 		LAST(TokenQueue tq, Scope& scope);
 		//LAST(const LAST& last2);
@@ -238,7 +259,8 @@ namespace lwc {
 		CodeBlock code_block;
 		static const RegisterType* typei;
 	public:
-		CodeBlockVariable(CodeBlock& _code_block) : code_block(_code_block) { std::cout << "CBV created\n"; }
+		CodeBlockVariable(CodeBlock& _code_block) : code_block(_code_block) {}
+		CodeBlockVariable(CodeBlock&& _code_block) : code_block(_code_block) {}
 		CodeBlockVariable() {}
 		long get();
 		void* get_vp(void*& reg) { *(long*)reg = this->get();  return reg; }

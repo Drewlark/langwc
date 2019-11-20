@@ -2,7 +2,7 @@
 #include "lwc_Parser.h"
 namespace lwc {
 	
-	ParseToken::ParseToken(std::string _val, TokenType _tt, RegisterType* _rt, int _precedence, bool _leftassoc, bool _rval) : val(_val), tt(_tt), rt(_rt), precedence(_precedence), leftassoc(_leftassoc), rval(_rval) {
+	ParseToken::ParseToken(std::string _val, TokenType _tt, const RegisterType* _rt, int _precedence, bool _leftassoc, bool _rval) : val(_val), tt(_tt), rt(_rt), precedence(_precedence), leftassoc(_leftassoc), rval(_rval) {
 		if (tt == TokenType::CALL && func_ids.count(val)) {
 			opfunc = func_ids[val].fnc;
 			argn = func_ids[val].arg_count;
@@ -107,7 +107,7 @@ namespace lwc {
 			}
 			if (qs == QState::ELASTIC) {
 				if (c == '`') {
-					data.push_back(ParseToken(temp, TokenType::ELASTIC, new TypeImpl<NumVar>));
+					data.push_back(ParseToken(temp, TokenType::ELASTIC, &NUM_TYPEI));
 					qs = QState::DEF;
 					temp.clear();
 					if (!func_stack.empty()) {
@@ -162,12 +162,13 @@ namespace lwc {
 			else if (c == '{') {
 				if (!data.empty() && data.back().tt == TokenType::RPAREN)
 					data.back().brace_start = true;
+				++brace_starts;
 			}
 			else if (c == '}') {
 				if (temp.size() > 0) {
 					add_unknown(temp, qs);
 				}
-				brace_end = true;
+				++brace_ends;
 				qs = QState::DEF;
 			}
 			else

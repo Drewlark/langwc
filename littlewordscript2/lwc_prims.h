@@ -1,6 +1,6 @@
 #include <sstream>
 #include <string>
-
+#include <cstdint>
 // Debug definitions
 // #define PRINT_LVAL_INFO
 
@@ -41,11 +41,11 @@ namespace lwc {
 		bool leftassoc = false;
 		int8_t precedence = 0;
 		bool rval = false;
-		RegisterType* rt = nullptr;
+		const RegisterType* rt = nullptr;
 		std::string debug_name;
 		OperatorIdentity(lwc::builtin_func _fnc, bool _leftassoc,
 			int8_t _precedence, bool _rval = false, 
-			RegisterType* _rt = nullptr, std::string _debug_name = "") : fnc(_fnc), leftassoc(_leftassoc),
+			const RegisterType* _rt = nullptr, std::string _debug_name = "") : fnc(_fnc), leftassoc(_leftassoc),
 			precedence(_precedence), rval(_rval), rt(_rt), debug_name(_debug_name) {};
 		OperatorIdentity() { delete rt; };
 		~OperatorIdentity() {};
@@ -55,8 +55,8 @@ namespace lwc {
 		lwc::builtin_func fnc = nullptr;
 		int arg_count = 0;
 		bool rval = false;
-		RegisterType* rt = nullptr;
-		BuiltInIdentity(lwc::builtin_func _fnc, RegisterType* _rt, int _arg_count = 0, bool _rval = false) : fnc(_fnc), arg_count(_arg_count), rval(_rval), rt(_rt) {}
+		const RegisterType* rt = nullptr;
+		BuiltInIdentity(lwc::builtin_func _fnc, const RegisterType* _rt, int _arg_count = 0, bool _rval = false) : fnc(_fnc), arg_count(_arg_count), rval(_rval), rt(_rt) {}
 		BuiltInIdentity() {};
 		~BuiltInIdentity() { };
 	};
