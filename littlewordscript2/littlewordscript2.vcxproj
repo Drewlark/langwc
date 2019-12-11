@@ -123,7 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="lwc_Lexing.h" />
+    <ClInclude Include="lwc_Lexer.h" />
     <ClInclude Include="lwc_builtins.h" />
     <ClInclude Include="lwc_err_codes.h" />
     <ClInclude Include="lwc_prims.h" />
@@ -134,7 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lwc_builtins.cpp" />
-    <ClCompile Include="lwc_Lexing.cpp" />
+    <ClCompile Include="lwc_Lexer.cpp" />
     <ClCompile Include="lwc_Scope.cpp" />
     <ClCompile Include="lwc_typedefs.cpp" />
     <ClCompile Include="main.cpp" />

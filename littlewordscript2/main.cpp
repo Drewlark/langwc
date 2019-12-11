@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <chrono>
+#include <sstream>
 #include "lwc_Parser.h"
 
 int main(int argc, char* argv[])
@@ -20,7 +21,12 @@ int main(int argc, char* argv[])
 	fs.open(file_name.c_str());
 	if (fs.good()) {
 		std::string line;
-		while (std::getline(fs, line)) {
+		std::stringstream buffer;
+		buffer << fs.rdbuf();
+		auto glob = lwc::build_linktree(buffer.str());
+		auto blocks = lwc::block_map;
+		
+		while (std::getline(buffer, line)) {
 			words.push_back(line);
 		}
 		fs.flush();

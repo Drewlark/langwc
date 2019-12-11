@@ -2,6 +2,11 @@ bi = 0
 # lamba-like code captures called 'elastics'
 elast n2 => `(250*250)+(bi=1)` 
 
+#func foo(){
+#print(1010101)
+#}
+
+
 elast awe => `(250+5)+(1*10)`
 print(awe)
 
@@ -13,17 +18,17 @@ pxnor(n1, n2) #elasts are run concurrently. return value is xnor of them (placeh
 
 # fibonacci sequence calculator
 while(x){
- a=0
- b=1
- c=0
- iter=0
- while(`iter<10`){
-  a=c+b
-#  print(iter, a, b, c)
-  c=b
-  b=a
-  iter+=1
- }
-# print()
- bi+=1
+	a=0
+	b=1
+	c=0
+	iter=0
+	while(`iter<10`){
+		a=c+b
+		# print(iter, a, b, c)
+		c=b
+		b=a
+		iter+=1
+	}
+	# print()
+	bi+=1
 }

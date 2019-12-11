@@ -86,10 +86,12 @@ namespace lwc {
 	}
 	RegisterType const* const LASTVariable::get_typei() { return typei; }
 
-	TokenQueue shunting_yard(TokenQueue tq) //Adapted Shunting-Yard algorithm. output is the output queue
+	// Adapted Shunting-Yard algorithm. output is the output queue
+	TokenQueue shunting_yard(TokenQueue tq) 
 	{
-		TokenQueue out_q(tq.brace_ends); //output queue
-		std::stack<ParseToken> op_stk; //operator stack
+		
+		TokenQueue out_q(tq.brace_starts, tq.brace_ends); // output queue
+		std::stack<ParseToken> op_stk; // operator stack
 
 		while (!tq.empty()) {
 			ParseToken pt = tq.pop();
@@ -109,7 +111,9 @@ namespace lwc {
 				break;
 			case TokenType::OP:
 				while (!op_stk.empty() && ((op_stk.top().tt == TokenType::OP) &&
-					(op_stk.top() > pt || (op_stk.top().precedence == pt.precedence && pt.leftassoc)))) {
+					(op_stk.top() > pt || 
+					(op_stk.top().precedence == pt.precedence && pt.leftassoc)))) 
+				{
 					out_q.push(op_stk.top());
 					op_stk.pop();
 				}
@@ -293,24 +297,28 @@ namespace lwc {
 		return *var;
 	}
 
-	CodeBlock r_parse_tq(std::vector<TokenQueue> lines_vec, Scope& scope) {
+	CodeBlock r_parse_tq(const std::vector<TokenQueue> &lines_vec, Scope& scope, int starts = 0) {
 		CodeBlock cb;
 		std::vector<TokenQueue> tq_buffer;
-		auto starts = 0;
 		for (auto line : lines_vec) {
 			if (starts <= 0) {
-				starts += line.brace_starts;
-				cb.emplace_back(line, scope);
+				// std::cout << (int)line.brace_starts << '\n';
+				if(!line.empty()) cb.emplace_back(line, scope);
 			}
 			else {
 				tq_buffer.push_back(line);
 				starts -= line.brace_ends;
+				// std::cout << (int)line.brace_ends << '\n';
 				if (starts <= 0) {
 					auto cbv = new CodeBlockVariable(r_parse_tq(tq_buffer, scope));
-					cb.back().block_node = new LineNode(TokenType::NUM, cbv, &NUM_TYPEI);
+					LineNode* ln = new LineNode(TokenType::NUM, cbv, &NUM_TYPEI);
+					cb.back().block_node->add_branch(ln);
+					starts = 0;
 				}
 			}
+			starts += line.brace_starts;
 		}
+		return cb;
 	}
 
 	CodeBlock _parse_tq(std::vector<TokenQueue> lines_vec, Scope& scope)
@@ -328,25 +336,16 @@ namespace lwc {
 				bnode = blockstack.top().back().block_node; // block_node here might also be nullptr
 			}
 
-			if (bnode) { // bnode will only be set if this line had a cbv attached
+			if (bnode) { // bnode will only be set if this line's bnode was not nullptr
 				blockstack.emplace();
 				bnodes.push(bnode);
 			}
 			else if (line.brace_ends) {
-				if (bnodes.top()->tt == TokenType::DECL_FUNC) {
-					std::vector<std::string> params;
-					for (unsigned int i = 0; i < bnodes.top()->sz; ++i) {
-						params.push_back(bnodes.top()->get_branch(i)->name);
-					}
-					//UserFunctionTemplate uft(, scope, params);
-				}
-				else {
-					CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
-					blockstack.pop();
-					LineNode* ln = new LineNode(TokenType::NUM, cbv, &NUM_TYPEI);
-					bnodes.top()->add_branch(ln);
-					bnodes.pop();
-				}
+				CodeBlockVariable* cbv = new CodeBlockVariable(blockstack.top());
+				blockstack.pop();
+				LineNode* ln = new LineNode(TokenType::NUM, cbv, &NUM_TYPEI);
+				bnodes.top()->add_branch(ln);
+				bnodes.pop();
 			}
 		}
 		return blockstack.top();
@@ -357,12 +356,36 @@ namespace lwc {
 		return _parse_tq(lines_vec, scope);
 	}
 
+	std::vector<TokenQueue> preprocess_slines(const std::vector<std::string>& slines) {
+		std::vector<TokenQueue> lines;
+		for (const auto& line : slines) {
+			lines.emplace_back(shunting_yard(TokenQueue(line)));
+		}
+	}
+
+	struct ParsedBlock {
+		TokenQueue header;
+		std::vector<TokenQueue> body;
+		ParsedBlock(const LinkerData &ld, const std::vector<std::string>& slines) 
+		: header(slines[ld.start]){
+			auto first = slines.begin() + ld.start+1;
+			auto last = slines.begin() + ld.end+1;
+			std::vector<std::string> sublines(first, last);
+			body = preprocess_slines(sublines);
+		}
+	};
+
 	CodeBlock parse_from_slines(std::vector<std::string> slines, Scope& scope) {
 		std::vector<TokenQueue> lines_vec;
-		for (auto& s : slines) {
-			lines_vec.push_back(shunting_yard(TokenQueue(s)));
+		std::unordered_map<unsigned int, ParsedBlock> pblockmap;
+		for (const auto& block : block_map) {
+			pblockmap.emplace(block.start, ParsedBlock(block, slines));
 		}
-		return _parse_tq(lines_vec, scope);
+		for (auto& line : slines) {
+			TokenQueue tq(line);
+			lines_vec.push_back(shunting_yard(tq));
+		}
+		return r_parse_tq(lines_vec, scope);
 	}
 
 

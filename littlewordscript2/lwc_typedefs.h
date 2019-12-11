@@ -10,7 +10,7 @@
 #include <iostream>
 #include <set>
 #include "lwc_prims.h"
-#include "lwc_Lexing.h"
+#include "lwc_Lexer.h"
 #ifndef LWC_TYPEDEF
 #define LWC_TYPEDEF
 
@@ -107,7 +107,8 @@ namespace lwc {
 	public:
 		uint8_t brace_ends = 0;
 		uint8_t brace_starts = 0;
-		TokenQueue(bool _brace_end) : brace_ends(_brace_end) {}
+		TokenQueue(uint8_t _brace_starts, uint8_t _brace_ends) : 
+			brace_starts(_brace_starts), brace_ends(_brace_ends) {}
 		TokenQueue(std::string s);
 		ParseToken pop();
 		void void_pop() { data.pop_front();}

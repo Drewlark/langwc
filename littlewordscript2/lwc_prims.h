@@ -1,6 +1,7 @@
 #include <sstream>
 #include <string>
 #include <cstdint>
+#include <memory>
 // Debug definitions
 // #define PRINT_LVAL_INFO
 
